@@ -1,4 +1,11 @@
-# Project Overview
+## **Frontend Options**
+
+The project provides two ways to interact with the system, catering to different development stages:
+
+1.  **Vanilla Frontend (`/frontend`):** Uses traditional HTML/CSS/JS. Ideal for demonstrating core DOM manipulation and basic API interactions.
+2.  **React Frontend (`/frontend-react`):** Uses React + TypeScript + Vite. Demonstrates state-based UI, component-driven architecture, and type safety.
+
+Both versions communicate with the same Redis-backed Express API.
 
 ## **Architecture**
 
