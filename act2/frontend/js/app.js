@@ -6,7 +6,6 @@ const submitBtn = document.getElementById('submit-btn');
 const cancelBtn = document.getElementById('cancel-btn');
 const studentIdInput = document.getElementById('student-id');
 const nameInput = document.getElementById('name');
-const addressInput = document.getElementById('address');
 const emailInput = document.getElementById('email');
 const courseInput = document.getElementById('course');
 const yearLevelInput = document.getElementById('yearLevel');
@@ -46,7 +45,6 @@ function renderStudents(students) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${escapeHtml(student.name)}</td>
-            <td>${escapeHtml(student.address)}</td>
             <td>${escapeHtml(student.email)}</td>
             <td>${escapeHtml(student.course)}</td>
             <td>${escapeHtml(student.yearLevel)}</td>
@@ -79,7 +77,6 @@ async function handleSubmit(e) {
 
     const studentData = {
         name: nameInput.value.trim(),
-        address: addressInput.value.trim(),
         email: emailInput.value.trim(),
         course: courseInput.value.trim(),
         yearLevel: yearLevelInput.value,
@@ -116,7 +113,6 @@ async function editStudent(id) {
 
         studentIdInput.value = student.id;
         nameInput.value = student.name;
-        addressInput.value = student.address;
         emailInput.value = student.email;
         courseInput.value = student.course;
         yearLevelInput.value = student.yearLevel;
@@ -150,7 +146,6 @@ async function deleteStudent(id) {
 function resetForm() {
     form.reset();
     studentIdInput.value = '';
-    addressInput.value = '';
     courseInput.value = '';
     yearLevelInput.value = '';
     isEditing = false;
