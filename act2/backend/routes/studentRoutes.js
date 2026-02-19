@@ -10,10 +10,10 @@ const {
 
 // Pre-hook middleware — runs before create and update
 const validateStudent = (req, res, next) => {
-    const { name, email, course } = req.body;
+    const { name, email, course, age, networth } = req.body;
 
     // Validation: check required fields
-    if (!name || !email || !course) {
+    if (!name || !email || !course || !age || !networth) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -21,6 +21,8 @@ const validateStudent = (req, res, next) => {
     req.body.name = name.trim();
     req.body.email = email.toLowerCase().trim();
     req.body.course = course.trim();
+    req.body.age = age.toString().trim();
+    req.body.networth = networth.toString().trim();
 
     next(); // Pass to controller
 };
