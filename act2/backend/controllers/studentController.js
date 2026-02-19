@@ -40,15 +40,15 @@ const getStudent = async (req, res) => {
 // Create student
 const createStudent = async (req, res) => {
     try {
-        const { name, email, course, age, networth } = req.body;
+        const { name, email, course, age, networth, yearLevel } = req.body;
 
-        if (!name || !email || !course || !age || !networth) {
-            return res.status(400).json({ message: 'Name, email, course, age, and networth are required' });
+        if (!name || !email || !course || !age || !networth || !yearLevel) {
+            return res.status(400).json({ message: 'Name, email, course, age, networth, and year level are required' });
         }
 
         const id = uuidv4();
         const now = new Date().toISOString();
-        const student = { id, name, email: email.toLowerCase().trim(), course, age, networth, createdAt: now, updatedAt: now };
+        const student = { id, name, email: email.toLowerCase().trim(), course, age, networth, yearLevel, createdAt: now, updatedAt: now };
 
         await client.hSet(STUDENT_KEY(id), student);
         await client.sAdd(STUDENTS_SET, id);
@@ -67,13 +67,14 @@ const updateStudent = async (req, res) => {
             return res.status(404).json({ message: 'Student not found' });
         }
 
-        const { name, email, course, age, networth } = req.body;
+        const { name, email, course, age, networth, yearLevel } = req.body;
         const updates = { updatedAt: new Date().toISOString() };
         if (name) updates.name = name;
         if (email) updates.email = email.toLowerCase().trim();
         if (course) updates.course = course;
         if (age) updates.age = age;
         if (networth) updates.networth = networth;
+        if (yearLevel) updates.yearLevel = yearLevel;
 
         await client.hSet(STUDENT_KEY(req.params.id), updates);
         const student = await client.hGetAll(STUDENT_KEY(req.params.id));

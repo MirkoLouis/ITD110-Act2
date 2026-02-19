@@ -16,23 +16,39 @@
                 <input type="hidden" id="student-id">
                 <div class="form-group">
                     <label for="name">Name</label>
-                    <input type="text" id="name" name="name" required>
+                    <input type="text" id="name" name="name" required placeholder="Full Name">
                 </div>
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="course">Course</label>
-                    <input type="text" id="course" name="course" required>
+                    <input type="email" id="email" name="email" required placeholder="email@example.com">
                 </div>
                 <div class="form-group">
                     <label for="age">Age</label>
-                    <input type="number" id="age" name="age" required>
+                    <input type="number" id="age" name="age" required min="1">
                 </div>
                 <div class="form-group">
                     <label for="networth">Networth</label>
-                    <input type="number" id="networth" name="networth" step="0.01" required>
+                    <input type="number" id="networth" name="networth" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="course">Course</label>
+                    <select id="course" name="course" required>
+                        <option value="" disabled selected>Select Course</option>
+                        <option value="BSIT">BSIT</option>
+                        <option value="BSCS">BSCS</option>
+                        <option value="BSIS">BSIS</option>
+                        <option value="BSCA">BSCA</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="yearLevel">Year</label>
+                    <select id="yearLevel" name="yearLevel" required>
+                        <option value="" disabled selected>Select Year</option>
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year">2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                        <option value="4th Year">4th Year</option>
+                    </select>
                 </div>
                 <div class="form-actions">
                     <button type="submit" id="submit-btn">Add Student</button>
@@ -49,6 +65,7 @@
                         <th>Name</th>
                         <th>Email</th>
                         <th>Course</th>
+                        <th>Year</th>
                         <th>Age</th>
                         <th>Networth</th>
                         <th>Actions</th>
