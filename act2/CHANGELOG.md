@@ -1,5 +1,10 @@
 # Changelog
 
+## [2026-02-21 10:00 AM]
+
+### FIXED
+- Prevented `networth` field in `frontend-react` from accepting negative values by adding `min="0"` attribute and state-level validation.
+
 ## [2026-02-19 10:45 AM]
 
 ### ADDED

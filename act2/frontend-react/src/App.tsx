@@ -63,6 +63,7 @@ function App() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    if (name === 'networth' && Number(value) < 0) return;
     setFormData({ ...formData, [name]: value });
   };
 
@@ -198,7 +199,7 @@ function App() {
             </div>
             <div className="form-group">
               <label><DollarSign size={16} className="label-icon" /> Networth</label>
-              <input type="number" name="networth" step="1" value={formData.networth} onChange={handleInputChange} required />
+              <input type="number" name="networth" step="1" value={formData.networth} onChange={handleInputChange} required min="0" />
             </div>
             <div className="form-group">
               <label><BookOpen size={16} className="label-icon" /> Course</label>
