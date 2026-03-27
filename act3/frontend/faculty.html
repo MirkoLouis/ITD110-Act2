@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Management System</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>School Portal</h2>
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="index.html"><span class="icon">👨‍🎓</span> <span>Students</span></a></li>
+            <li><a href="faculty.html" class="active"><span class="icon">👨‍🏫</span> <span>Faculty</span></a></li>
+            <li><a href="course.html"><span class="icon">📚</span> <span>Courses</span></a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <div class="container">
+            <h1>Faculty Management</h1>
+
+            <div class="form-container">
+                <h2 id="form-title">Add New Faculty</h2>
+                <form id="faculty-form">
+                    <input type="hidden" id="faculty-id">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" name="name" placeholder="Enter professor's name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Office Address</label>
+                        <input type="text" id="address" name="address" placeholder="e.g. Building A, Room 101" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="department">Department</label>
+                        <input type="text" id="department" name="department" placeholder="e.g. Computer Science" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="courses">Teaching Load (Hold Ctrl/Cmd to select multiple)</label>
+                        <select id="courses" name="courses" multiple>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" id="submit-btn">Add Faculty</button>
+                        <button type="button" id="cancel-btn" class="hidden">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header-area">
+                    <h2>Faculty List</h2>
+                </div>
+                <table id="faculty-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Address</th>
+                            <th>Department</th>
+                            <th>Courses</th>
+                            <th style="width: 180px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="faculty-tbody">
+                    </tbody>
+                </table>
+                <p id="no-faculty" class="hidden">No faculty found. Register one above!</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/faculty.js"></script>
+</body>
+</html>
