@@ -9,7 +9,7 @@ const courseCodeInput = document.getElementById('course-code');
 const courseNameInput = document.getElementById('course-name');
 const descriptionInput = document.getElementById('description');
 const creditsInput = document.getElementById('credits');
-const tbody = document.getElementById('course-tbody');
+const tbody = document.getElementById('courses-tbody');
 const noCoursesMsg = document.getElementById('no-courses');
 
 let isEditing = false;
