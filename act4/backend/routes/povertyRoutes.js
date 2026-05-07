@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
     importDataset,
+    clearAll,
     getRegions,
     getByRegion,
     getOne,
@@ -12,6 +13,9 @@ const {
 
 // POST /api/poverty/import — bulk import CSV
 router.post('/import', importDataset);
+
+// DELETE /api/poverty/all — clear all data
+router.delete('/all', clearAll);
 
 // GET /api/poverty/regions — list all distinct regions
 router.get('/regions', getRegions);

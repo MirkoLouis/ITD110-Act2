@@ -2,6 +2,8 @@ const API_URL = 'http://localhost:3000/api/poverty';
 
 const csvFileInput = document.getElementById('csv-file');
 const importBtn = document.getElementById('import-btn');
+const clearAllBtn = document.getElementById('clear-all-btn');
+const clearFirstCheck = document.getElementById('clear-first');
 const importStatus = document.getElementById('import-status');
 const dataForm = document.getElementById('data-form');
 const formTitle = document.getElementById('form-title');
@@ -29,6 +31,8 @@ importBtn.addEventListener('click', async () => {
     }
 
     const text = await file.text();
+    const clearFirst = clearFirstCheck.checked;
+    
     importBtn.disabled = true;
     importBtn.textContent = 'Importing...';
 
@@ -36,7 +40,7 @@ importBtn.addEventListener('click', async () => {
         const res = await fetch(`${API_URL}/import`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ csv: text }),
+            body: JSON.stringify({ csv: text, clearFirst }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message);
@@ -51,10 +55,36 @@ importBtn.addEventListener('click', async () => {
     }
 });
 
+// ---- Clear All ----
+clearAllBtn.addEventListener('click', async () => {
+    if (!confirm('Are you sure you want to clear ALL data points? This action cannot be undone.')) return;
+
+    clearAllBtn.disabled = true;
+    clearAllBtn.textContent = 'Clearing...';
+
+    try {
+        const res = await fetch(`${API_URL}/all`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        showImportStatus(data.message, false);
+        loadRegions();
+        loadData();
+    } catch (err) {
+        showImportStatus(err.message, true);
+    } finally {
+        clearAllBtn.disabled = false;
+        clearAllBtn.textContent = 'Clear All Data';
+    }
+});
+
 function showImportStatus(msg, isError) {
     importStatus.textContent = msg;
     importStatus.className = isError ? 'status error' : 'status success';
     importStatus.classList.remove('hidden');
+    // Hide status after 5 seconds if success
+    if (!isError) {
+        setTimeout(() => importStatus.classList.add('hidden'), 5000);
+    }
 }
 
 // ---- Region dropdown ----

@@ -3,9 +3,14 @@ const { client } = require('../config/db');
 // Parse the semicolon-delimited CSV and bulk-insert into Cassandra
 const importDataset = async (req, res) => {
     try {
-        const { csv } = req.body;
+        const { csv, clearFirst } = req.body;
         if (!csv) {
             return res.status(400).json({ message: 'CSV data is required' });
+        }
+
+        // Optional: Clear table before import
+        if (clearFirst) {
+            await client.execute('TRUNCATE poverty_by_age_group');
         }
 
         const lines = csv.split('\n').filter((l) => l.trim());
@@ -52,7 +57,17 @@ const importDataset = async (req, res) => {
             await client.batch(batch, { prepare: true });
         }
 
-        res.json({ message: `Imported ${inserted} data points` });
+        res.json({ message: `Imported ${inserted} data points${clearFirst ? ' (Existing data cleared)' : ''}` });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Truncate the entire table
+const clearAll = async (req, res) => {
+    try {
+        await client.execute('TRUNCATE poverty_by_age_group');
+        res.json({ message: 'All data points cleared successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -186,4 +201,4 @@ const deleteOne = async (req, res) => {
     }
 };
 
-module.exports = { importDataset, getRegions, getByRegion, getOne, createOne, updateOne, deleteOne };
+module.exports = { importDataset, clearAll, getRegions, getByRegion, getOne, createOne, updateOne, deleteOne };

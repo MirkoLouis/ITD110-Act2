@@ -25,7 +25,16 @@
             <p class="section-desc">Upload the CSV file containing proportion of population living below the national poverty line.</p>
             <div class="import-row">
                 <input type="file" id="csv-file" accept=".csv">
-                <button id="import-btn" class="btn btn-import">Import CSV</button>
+                <div class="import-actions">
+                    <button id="import-btn" class="btn btn-import">Import CSV</button>
+                    <button id="clear-all-btn" class="btn btn-danger">Clear All Data</button>
+                </div>
+            </div>
+            <div class="import-options">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="clear-first" checked>
+                    Clear existing data before import
+                </label>
             </div>
             <p id="import-status" class="status hidden"></p>
         </section>

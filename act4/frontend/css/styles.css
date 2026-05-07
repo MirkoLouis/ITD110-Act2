@@ -128,11 +128,40 @@ h1 {
     cursor: not-allowed;
 }
 
+.btn-danger {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.btn-danger:hover {
+    background: #fecaca;
+}
+
 /* ---- Import ---- */
 .import-row {
     display: flex;
     align-items: center;
     gap: 12px;
+    margin-bottom: 12px;
+}
+
+.import-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.import-options {
+    margin-bottom: 14px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #666;
+    cursor: pointer;
 }
 
 .import-row input[type="file"] {
