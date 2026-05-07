@@ -21,6 +21,8 @@ const dataTbody = document.getElementById('data-tbody');
 const noData = document.getElementById('no-data');
 
 let isEditing = false;
+let currentData = [];
+let sortConfig = { key: 'region', direction: 'asc' };
 
 // ---- Import ----
 importBtn.addEventListener('click', async () => {
@@ -81,7 +83,6 @@ function showImportStatus(msg, isError) {
     importStatus.textContent = msg;
     importStatus.className = isError ? 'status error' : 'status success';
     importStatus.classList.remove('hidden');
-    // Hide status after 5 seconds if success
     if (!isError) {
         setTimeout(() => importStatus.classList.add('hidden'), 5000);
     }
@@ -106,27 +107,49 @@ async function loadRegions() {
 
 regionSelect.addEventListener('change', loadData);
 
+// ---- Sorting ----
+document.querySelectorAll('.sort-header').forEach(header => {
+    header.addEventListener('click', () => {
+        const key = header.getAttribute('data-sort');
+        if (sortConfig.key === key) {
+            sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortConfig.key = key;
+            sortConfig.direction = 'asc';
+        }
+        
+        updateSortIndicators();
+        renderTable(currentData);
+    });
+});
+
+function updateSortIndicators() {
+    document.querySelectorAll('.sort-header').forEach(header => {
+        header.classList.remove('asc', 'desc');
+        if (header.getAttribute('data-sort') === sortConfig.key) {
+            header.classList.add(sortConfig.direction);
+        }
+    });
+}
+
 // ---- Load table data ----
 async function loadData() {
     const selected = regionSelect.value;
     try {
-        let rows;
         if (selected) {
             const res = await fetch(`${API_URL}/${encodeURIComponent(selected)}`);
-            rows = await res.json();
+            currentData = await res.json();
         } else {
-            // Load all regions' data
             const regRes = await fetch(`${API_URL}/regions`);
             const regions = await regRes.json();
-            rows = [];
+            currentData = [];
             for (const r of regions) {
                 const res = await fetch(`${API_URL}/${encodeURIComponent(r)}`);
                 const data = await res.json();
-                rows.push(...data);
+                currentData.push(...data);
             }
         }
-
-        renderTable(rows);
+        renderTable(currentData);
     } catch {
         renderTable([]);
     }
@@ -142,14 +165,27 @@ function renderTable(rows) {
 
     noData.classList.add('hidden');
 
-    // Sort: region asc, age_group asc, year desc
-    rows.sort((a, b) => 
-        a.region.localeCompare(b.region) || 
-        a.age_group.localeCompare(b.age_group) || 
-        b.year - a.year
-    );
+    // Apply sorting
+    const sortedRows = [...rows].sort((a, b) => {
+        let valA = a[sortConfig.key];
+        let valB = b[sortConfig.key];
 
-    rows.forEach((r) => {
+        if (typeof valA === 'string') {
+            valA = valA.toLowerCase();
+            valB = valB.toLowerCase();
+        }
+
+        if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+        
+        // Secondary sort to maintain stability
+        if (sortConfig.key !== 'region') {
+            return a.region.localeCompare(b.region);
+        }
+        return 0;
+    });
+
+    sortedRows.forEach((r) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${escapeHtml(r.region)}</td>
@@ -190,7 +226,6 @@ dataForm.addEventListener('submit', async (e) => {
             const origAgeGroup = editOriginalAgeGroup.value;
             const origYear = parseInt(editOriginalYear.value);
 
-            // If primary key components changed, delete old + create new
             if (origRegion !== region || origAgeGroup !== age_group || origYear !== year) {
                 await fetch(`${API_URL}/${encodeURIComponent(origRegion)}/${encodeURIComponent(origAgeGroup)}/${origYear}`, { method: 'DELETE' });
                 await fetch(API_URL, {
@@ -262,5 +297,6 @@ function resetForm() {
 }
 
 // ---- Init ----
+updateSortIndicators();
 loadRegions();
 loadData();

@@ -24,3 +24,12 @@
 
 ### FIXED
 - Fixed ReferenceError in `povertyRoutes.js` by correctly destructuring the `clearAll` controller.
+
+## 2026-05-07 20:29
+
+- Version: 1.2.0-Beta+202605072029
+
+### ADDED
+- Implemented client-side table sorting by clicking column headers.
+- Added visual sort indicators (↑, ↓) in table headers.
+- Added hover effects and improved accessibility for sortable columns.
