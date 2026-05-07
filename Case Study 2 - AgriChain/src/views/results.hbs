@@ -1,0 +1,33 @@
+<section class="card">
+    <h2>Blast Radius Analysis Results</h2>
+    <p>Tracing contamination for Chemical Batch: <strong id="batch-id-display">{{batchId}}</strong></p>
+</section>
+
+<section class="card">
+    <h3>Supply Chain Lineage Mapping</h3>
+    <div id="graph-container"></div>
+    <p class="text-light" style="font-size: 0.8rem; margin-top: 0.5rem;">Interactive Graph: You can drag nodes and zoom in/out to explore the connections.</p>
+</section>
+
+{{#if affectedMarkets.length}}
+...
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<script src="/js/graph.js"></script>
+    <div class="grid">
+        {{#each affectedMarkets}}
+            <div class="card" style="border-left: 5px solid var(--danger-color);">
+                <h3 style="color: var(--danger-color);">URGENT RECALL: {{this.market_name}}</h3>
+                <p><strong>Address:</strong> {{this.market_address}}</p>
+                <p><strong>Affected Crop Batch:</strong> {{this.crop_batch}}</p>
+            </div>
+        {{/each}}
+    </div>
+{{else}}
+    <section class="card">
+        <p>No affected retail markets found for this chemical batch, or the chemical is not marked as RECALLED.</p>
+    </section>
+{{/if}}
+
+<div style="margin-top: 1rem;">
+    <a href="/" class="btn" style="text-decoration: none; display: inline-block;">Back to Dashboard</a>
+</div>

@@ -1,0 +1,21 @@
+{
+  "name": "case-study-2---agrichain",
+  "version": "1.0.0",
+  "description": "Graph-driven, farm-to-table traceability and threat intelligence web application for Northern Mindanao.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "seed": "node data/seed.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-handlebars": "^8.0.6",
+    "neo4j-driver": "^6.0.1"
+  }
+}
