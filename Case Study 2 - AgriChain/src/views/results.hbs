@@ -1,33 +1,42 @@
-<section class="card">
-    <h2>Blast Radius Analysis Results</h2>
-    <p>Tracing contamination for Chemical Batch: <strong id="batch-id-display">{{batchId}}</strong></p>
+<section class="card" style="border-left: 10px solid {{#if isRecalled}}var(--danger-color){{else}}var(--success-color){{/if}};">
+    <h2>Lineage Analysis: {{productName}}</h2>
+    <p>Batch ID: <strong id="batch-id-display">{{batchId}}</strong></p>
+    <p>Current Status: <span style="font-weight: bold; color: {{#if isRecalled}}var(--danger-color){{else}}var(--success-color){{/if}};">{{chemicalStatus}}</span></p>
 </section>
 
 <section class="card">
-    <h3>Supply Chain Lineage Mapping</h3>
+    <h3>Supply Chain Lineage Mapping (Interactive Graph)</h3>
     <div id="graph-container"></div>
-    <p class="text-light" style="font-size: 0.8rem; margin-top: 0.5rem;">Interactive Graph: You can drag nodes and zoom in/out to explore the connections.</p>
+    <p class="text-light" style="font-size: 0.8rem; margin-top: 0.5rem;">Red nodes indicate potential contamination points. Blue nodes represent end-point retail markets.</p>
 </section>
 
-{{#if affectedMarkets.length}}
-...
-<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-<script src="/js/graph.js"></script>
-    <div class="grid">
-        {{#each affectedMarkets}}
-            <div class="card" style="border-left: 5px solid var(--danger-color);">
-                <h3 style="color: var(--danger-color);">URGENT RECALL: {{this.market_name}}</h3>
-                <p><strong>Address:</strong> {{this.market_address}}</p>
-                <p><strong>Affected Crop Batch:</strong> {{this.crop_batch}}</p>
-            </div>
-        {{/each}}
-    </div>
+{{#if isRecalled}}
+    {{#if affectedMarkets.length}}
+        <div class="grid">
+            {{#each affectedMarkets}}
+                <div class="card" style="border-left: 5px solid var(--danger-color);">
+                    <h3 style="color: var(--danger-color);">URGENT RECALL: {{this.market_name}}</h3>
+                    <p><strong>Address:</strong> {{this.market_address}}</p>
+                    <p><strong>Affected Crop Batch:</strong> {{this.crop_batch}}</p>
+                </div>
+            {{/each}}
+        </div>
+    {{else}}
+        <section class="card">
+            <p>This chemical is RECALLED, but no downstream retail markets were found in the current lineage data.</p>
+        </section>
+    {{/if}}
 {{else}}
-    <section class="card">
-        <p>No affected retail markets found for this chemical batch, or the chemical is not marked as RECALLED.</p>
+    <section class="card" style="border-left: 5px solid var(--success-color);">
+        <h3 style="color: var(--success-color);">✓ Safe Supply Chain</h3>
+        <p>This chemical batch is currently marked as <strong>OK</strong>. The visualization above shows its normal distribution path through Northern Mindanao.</p>
     </section>
 {{/if}}
 
 <div style="margin-top: 1rem;">
-    <a href="/" class="btn" style="text-decoration: none; display: inline-block;">Back to Dashboard</a>
+    <a href="/chemicals" class="btn" style="text-decoration: none; display: inline-block;">Back to Inventory</a>
+    <a href="/" class="btn" style="text-decoration: none; display: inline-block; background-color: var(--secondary-color); color: var(--text-color); border: 1px solid var(--border-color);">Home Dashboard</a>
 </div>
+
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<script src="/js/graph.js"></script>

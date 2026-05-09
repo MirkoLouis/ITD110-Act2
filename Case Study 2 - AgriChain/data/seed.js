@@ -1,98 +1,98 @@
 const { runQuery, driver } = require('../src/db');
 
 /**
- * Seed data for AgriChain project.
- * Models Northern Mindanao agricultural supply chain (Saba bananas & coconuts).
+ * Seed data for AgriChain project - v1.4 Reliable Seeding.
+ * Fixes the variable shadowing bug in Cypher by separating paths into distinct queries.
  */
 const seedData = async () => {
-    console.log('--- Starting Database Seeding ---');
+    console.log('--- Starting Reliable Enriched Database Seeding ---');
 
     try {
-        // 1. Clear existing data
-        console.log('Cleaning existing data...');
+        // 1. Clear all existing data
+        console.log('Resetting database...');
         await runQuery('MATCH (n) DETACH DELETE n');
 
-        // 2. Create AgriChemicals
-        console.log('Creating AgriChemicals...');
+        // 2. Create All Nodes First
+        console.log('Creating Nodes...');
         await runQuery(`
-            CREATE (c1:AgriChemical {batch_id: 'CHEM-9942', type: 'Fertilizer', manufacturer: 'AgriGrow Solutions', status: 'RECALLED'})
-            CREATE (c2:AgriChemical {batch_id: 'CHEM-1022', type: 'Pesticide', manufacturer: 'BioShield Inc', status: 'OK'})
+            // Chemicals
+            CREATE (:AgriChemical {batch_id: 'CHEM-BKN-001', type: 'Fertilizer', manufacturer: 'AgriGrow Solutions', product_name: 'Ammonium Sulfate (21-0-0)', status: 'OK'})
+            CREATE (:AgriChemical {batch_id: 'CHEM-MIS-002', type: 'Fertilizer', manufacturer: 'BioShield Inc', product_name: 'Potassium Chloride (0-0-60)', status: 'RECALLED'})
+            CREATE (:AgriChemical {batch_id: 'CHEM-BKN-003', type: 'Fertilizer', manufacturer: 'Local Salt Co', product_name: 'Common Salt (NaCl)', status: 'OK'})
+            CREATE (:AgriChemical {batch_id: 'CHEM-PEST-004', type: 'Fungicide', manufacturer: 'Sharphil Inc', product_name: 'Azoxystrobin (Zoxy 250 SC)', status: 'RECALLED'})
+            CREATE (:AgriChemical {batch_id: 'CHEM-PEST-005', type: 'Insecticide', manufacturer: 'Link Agritech', product_name: 'Diazinon (Zenon)', status: 'OK'})
+            CREATE (:AgriChemical {batch_id: 'CHEM-UREA-006', type: 'Fertilizer', manufacturer: 'Fertilizer Corp Phil', product_name: 'Urea (46-0-0)', status: 'OK'})
+            CREATE (:AgriChemical {batch_id: 'CHEM-COMP-007', type: 'Fertilizer', manufacturer: 'Atlas Fertilizer', product_name: 'Complete (14-14-14)', status: 'OK'})
+
+            // Farms
+            CREATE (:Farm {farm_id: 'FARM-BKN-MANOLO', owner_name: 'Manolo Fortich Highland Farm', location: 'Manolo Fortich, Bukidnon'})
+            CREATE (:Farm {farm_id: 'FARM-MIS-CLAVERIA', owner_name: 'Claveria Vegetable Co-op', location: 'Claveria, Misamis Oriental'})
+            CREATE (:Farm {farm_id: 'FARM-BKN-TALAKAG', owner_name: 'Miarayon Highland Farm', location: 'Talakag, Bukidnon'})
+            CREATE (:Farm {farm_id: 'FARM-BKN-VALENCIA', owner_name: 'Valencia Rice/Corn Estates', location: 'Valencia City, Bukidnon'})
+            CREATE (:Farm {farm_id: 'FARM-LDN-TUBOD', owner_name: 'BARCOCO Bualan Co-op', location: 'Tubod, Lanao del Norte'})
+            CREATE (:Farm {farm_id: 'FARM-ILG-PALAO', owner_name: 'Izon Highland Farm', location: 'Pala-o, Iligan City'})
+
+            // Crops
+            CREATE (:CropBatch {batch_id: 'BATCH-BAN-SABA-01', crop_type: 'Saba Banana', harvest_date: '2026-05-01'})
+            CREATE (:CropBatch {batch_id: 'BATCH-COC-CLAV-01', crop_type: 'Coconut', harvest_date: '2026-05-05'})
+            CREATE (:CropBatch {batch_id: 'BATCH-VEG-TAL-01', crop_type: 'Carrots', harvest_date: '2026-05-10'})
+            CREATE (:CropBatch {batch_id: 'BATCH-CORN-VAL-01', crop_type: 'Yellow Corn', harvest_date: '2026-05-12'})
+            CREATE (:CropBatch {batch_id: 'BATCH-DAIRY-LDN-01', crop_type: 'Fresh Milk', harvest_date: '2026-05-14'})
+            CREATE (:CropBatch {batch_id: 'BATCH-SAK-MUN-01', crop_type: 'Sakurab (Scallion)', harvest_date: '2026-05-15'})
+
+            // Processing
+            CREATE (:ProcessingFacility {facility_id: 'PROC-TAG-GARDENIA', name: 'Gardenia Bread Plant', location: 'PHIVIDEC, Tagoloan', type: 'Bakery Manufacturing'})
+            CREATE (:ProcessingFacility {facility_id: 'PROC-TAG-OISHI', name: 'Liwayway (Oishi) Plant', location: 'PHIVIDEC, Tagoloan', type: 'Snack Food Processing'})
+            CREATE (:ProcessingFacility {facility_id: 'PROC-BKN-HUB', name: 'Bukidnon Food Hub', location: 'Manolo Fortich', type: 'Agri-Logistics & Processing'})
+            CREATE (:ProcessingFacility {facility_id: 'PROC-LDN-MILK', name: 'SND Milk Processing Plant', location: 'Sultan Naga Dimaporo, LDN', type: 'Dairy Processing'})
+            CREATE (:ProcessingFacility {facility_id: 'PROC-ILG-KAPE', name: 'Agri-Rainbow Coffee Plant', location: 'Iligan City', type: 'Coffee & Spice Processing'})
+
+            // Markets
+            CREATE (:RetailMarket {market_id: 'MKT-CDO-COGON', name: 'Cogon Public Market', address: 'Cagayan de Oro City'})
+            CREATE (:RetailMarket {market_id: 'MKT-ILG-PALAO', name: 'Pala-o Central Market', address: 'Iligan City'})
+            CREATE (:RetailMarket {market_id: 'MKT-ILG-TAMBO', name: 'Tambo Public Market', address: 'Tambo, Iligan City'})
+            CREATE (:RetailMarket {market_id: 'MKT-ILG-ROB', name: 'Robinsons Place Iligan', address: 'Macapagal Ave, Iligan City'})
+            CREATE (:RetailMarket {market_id: 'MKT-BKN-TAL', name: 'Talakag Regional Food Terminal', address: 'Talakag, Bukidnon'})
         `);
 
-        // 3. Create Farms
-        console.log('Creating Farms...');
-        await runQuery(`
-            CREATE (f1:Farm {farm_id: 'FARM-BUK-01', owner_name: 'Juan Dela Cruz', location_coordinates: '8.1284, 125.1274'})
-            CREATE (f2:Farm {farm_id: 'FARM-BUK-02', owner_name: 'Maria Santos', location_coordinates: '8.1300, 125.1350'})
-            CREATE (f3:Farm {farm_id: 'FARM-MISOR-01', owner_name: 'Roberto Lim', location_coordinates: '8.4542, 124.6319'})
-        `);
+        // 3. Establish Relationships one-by-one to avoid shadowing
+        console.log('Establishing Connectivity...');
 
-        // 4. Create CropBatches
-        console.log('Creating CropBatches...');
-        await runQuery(`
-            CREATE (b1:CropBatch {batch_id: 'BATCH-BAN-001', crop_type: 'Saba Banana', harvest_date: '2026-04-15'})
-            CREATE (b2:CropBatch {batch_id: 'BATCH-BAN-002', crop_type: 'Saba Banana', harvest_date: '2026-04-18'})
-            CREATE (b3:CropBatch {batch_id: 'BATCH-COC-101', crop_type: 'Coconut', harvest_date: '2026-04-20'})
-        `);
+        const paths = [
+            // PATH 1: CHEM-MIS-002
+            `MATCH (f:Farm {farm_id: 'FARM-MIS-CLAVERIA'}), (c:AgriChemical {batch_id: 'CHEM-MIS-002'}), (b:CropBatch {batch_id: 'BATCH-COC-CLAV-01'}), (p:ProcessingFacility {facility_id: 'PROC-TAG-OISHI'}), (m:RetailMarket {market_id: 'MKT-ILG-PALAO'})
+             CREATE (f)-[:APPLIED]->(c), (f)-[:PRODUCED]->(b), (b)-[:PROCESSED_AT]->(p), (p)-[:DISTRIBUTED_TO]->(m)`,
 
-        // 5. Create Processing Facilities
-        console.log('Creating Processing Facilities...');
-        await runQuery(`
-            CREATE (p1:ProcessingFacility {facility_id: 'PROC-CDO-01', name: 'Oro Processing Center', type: 'Banana Chip Plant'})
-            CREATE (p2:ProcessingFacility {facility_id: 'PROC-ILG-01', name: 'Iligan Coconut Oil Mill', type: 'Oil Extraction'})
-        `);
+            // PATH 2: CHEM-PEST-004
+            `MATCH (f:Farm {farm_id: 'FARM-BKN-MANOLO'}), (c:AgriChemical {batch_id: 'CHEM-PEST-004'}), (b:CropBatch {batch_id: 'BATCH-BAN-SABA-01'}), (p:ProcessingFacility {facility_id: 'PROC-BKN-HUB'}), (m:RetailMarket {market_id: 'MKT-ILG-TAMBO'})
+             CREATE (f)-[:APPLIED]->(c), (f)-[:PRODUCED]->(b), (b)-[:PROCESSED_AT]->(p), (p)-[:DISTRIBUTED_TO]->(m)`,
 
-        // 6. Create Retail Markets
-        console.log('Creating Retail Markets...');
-        await runQuery(`
-            CREATE (m1:RetailMarket {market_id: 'MKT-CDO-COG', name: 'Cogon Public Market', address: 'CDO City'})
-            CREATE (m2:RetailMarket {market_id: 'MKT-CDO-CAR', name: 'Carmen Public Market', address: 'CDO City'})
-            CREATE (m3:RetailMarket {market_id: 'MKT-VAL-PUB', name: 'Valencia Public Market', address: 'Valencia, Bukidnon'})
-        `);
+            // PATH 3: CHEM-BKN-001
+            `MATCH (f:Farm {farm_id: 'FARM-LDN-TUBOD'}), (c:AgriChemical {batch_id: 'CHEM-BKN-001'}), (b:CropBatch {batch_id: 'BATCH-DAIRY-LDN-01'}), (p:ProcessingFacility {facility_id: 'PROC-LDN-MILK'}), (m:RetailMarket {market_id: 'MKT-ILG-ROB'})
+             CREATE (f)-[:APPLIED]->(c), (f)-[:PRODUCED]->(b), (b)-[:PROCESSED_AT]->(p), (p)-[:DISTRIBUTED_TO]->(m)`,
 
-        // 7. Create Relationships
-        console.log('Establishing relationships...');
-        await runQuery(`
-            // Farm 1 applied contaminated fertilizer
-            MATCH (f:Farm {farm_id: 'FARM-BUK-01'}), (c:AgriChemical {batch_id: 'CHEM-9942'})
-            CREATE (f)-[:APPLIED {date_applied: '2026-03-01'}]->(c)
+            // PATH 4: CHEM-BKN-003
+            `MATCH (f:Farm {farm_id: 'FARM-BKN-TALAKAG'}), (c:AgriChemical {batch_id: 'CHEM-BKN-003'}), (b:CropBatch {batch_id: 'BATCH-VEG-TAL-01'}), (m:RetailMarket {market_id: 'MKT-BKN-TAL'})
+             CREATE (f)-[:APPLIED]->(c), (f)-[:PRODUCED]->(b), (b)-[:DISTRIBUTED_TO]->(m)`,
 
-            // Farm 2 used safe pesticide
-            MATCH (f:Farm {farm_id: 'FARM-BUK-02'}), (c:AgriChemical {batch_id: 'CHEM-1022'})
-            CREATE (f)-[:APPLIED {date_applied: '2026-03-05'}]->(c)
+            // PATH 5: CHEM-PEST-005
+            `MATCH (f:Farm {farm_id: 'FARM-BKN-VALENCIA'}), (c:AgriChemical {batch_id: 'CHEM-PEST-005'}), (b:CropBatch {batch_id: 'BATCH-CORN-VAL-01'}), (p:ProcessingFacility {facility_id: 'PROC-VAL-MILL'}), (m:RetailMarket {market_id: 'MKT-CDO-COGON'})
+             CREATE (f)-[:APPLIED]->(c), (f)-[:PRODUCED]->(b), (b)-[:PROCESSED_AT]->(p), (p)-[:DISTRIBUTED_TO]->(m)`,
 
-            // Production links
-            MATCH (f1:Farm {farm_id: 'FARM-BUK-01'}), (b1:CropBatch {batch_id: 'BATCH-BAN-001'})
-            CREATE (f1)-[:PRODUCED]->(b1)
+            // PATH 6: CHEM-UREA-006
+            `MATCH (f:Farm {farm_id: 'FARM-ILG-PALAO'}), (c:AgriChemical {batch_id: 'CHEM-UREA-006'}), (b:CropBatch {batch_id: 'BATCH-SAK-MUN-01'}), (p:ProcessingFacility {facility_id: 'PROC-ILG-KAPE'}), (m:RetailMarket {market_id: 'MKT-ILG-PALAO'})
+             CREATE (f)-[:APPLIED]->(c), (f)-[:PRODUCED]->(b), (b)-[:PROCESSED_AT]->(p), (p)-[:DISTRIBUTED_TO]->(m)`,
 
-            MATCH (f2:Farm {farm_id: 'FARM-BUK-02'}), (b2:CropBatch {batch_id: 'BATCH-BAN-002'})
-            CREATE (f2)-[:PRODUCED]->(b2)
+            // PATH 7: CHEM-COMP-007
+            `MATCH (f:Farm {farm_id: 'FARM-MIS-CLAVERIA'}), (c:AgriChemical {batch_id: 'CHEM-COMP-007'}), (b:CropBatch {batch_id: 'BATCH-COC-CLAV-01'}), (p:ProcessingFacility {facility_id: 'PROC-TAG-GARDENIA'}), (m:RetailMarket {market_id: 'MKT-CDO-COGON'})
+             CREATE (f)-[:APPLIED]->(c), (b)-[:PROCESSED_AT]->(p), (p)-[:DISTRIBUTED_TO]->(m)`
+        ];
 
-            MATCH (f3:Farm {farm_id: 'FARM-MISOR-01'}), (b3:CropBatch {batch_id: 'BATCH-COC-101'})
-            CREATE (f3)-[:PRODUCED]->(b3)
+        for (const query of paths) {
+            await runQuery(query);
+        }
 
-            // Processing links
-            MATCH (b1:CropBatch {batch_id: 'BATCH-BAN-001'}), (p1:ProcessingFacility {facility_id: 'PROC-CDO-01'})
-            CREATE (b1)-[:PROCESSED_AT {arrival_date: '2026-04-16'}]->(p1)
-
-            MATCH (b2:CropBatch {batch_id: 'BATCH-BAN-002'}), (p1:ProcessingFacility {facility_id: 'PROC-CDO-01'})
-            CREATE (b2)-[:PROCESSED_AT {arrival_date: '2026-04-19'}]->(p1)
-
-            MATCH (b3:CropBatch {batch_id: 'BATCH-COC-101'}), (p2:ProcessingFacility {facility_id: 'PROC-ILG-01'})
-            CREATE (b3)-[:PROCESSED_AT {arrival_date: '2026-04-22'}]->(p2)
-
-            // Distribution links
-            MATCH (p1:ProcessingFacility {facility_id: 'PROC-CDO-01'}), (m1:RetailMarket {market_id: 'MKT-CDO-COG'})
-            CREATE (p1)-[:DISTRIBUTED_TO {delivery_date: '2026-04-20'}]->(m1)
-
-            MATCH (p1:ProcessingFacility {facility_id: 'PROC-CDO-01'}), (m2:RetailMarket {market_id: 'MKT-CDO-CAR'})
-            CREATE (p1)-[:DISTRIBUTED_TO {delivery_date: '2026-04-21'}]->(m2)
-
-            MATCH (p2:ProcessingFacility {facility_id: 'PROC-ILG-01'}), (m3:RetailMarket {market_id: 'MKT-VAL-PUB'})
-            CREATE (p2)-[:DISTRIBUTED_TO {delivery_date: '2026-04-25'}]->(m3)
-        `);
-
-        console.log('--- Database Seeding Completed Successfully ---');
+        console.log('--- Reliable Seeding Completed Successfully ---');
     } catch (error) {
         console.error('Seed Error:', error);
     } finally {

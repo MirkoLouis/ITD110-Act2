@@ -1,0 +1,75 @@
+<section class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>AgriChemical Management</h2>
+        <a href="/api/backup" class="btn" style="background-color: var(--secondary-color); color: var(--text-color); border: 1px solid var(--border-color);">📥 Download JSON Backup</a>
+    </div>
+</section>
+
+<!-- Consolidated Trace Section -->
+<section class="card" style="border: 2px solid var(--primary-light);">
+    <h3>Quick Trace / Blast Radius Analysis</h3>
+    <p>Select a chemical below or enter a Batch ID to visualize its supply chain lineage.</p>
+    <form action="/trace" method="GET" style="display: flex; gap: 1rem; margin-top: 1rem;">
+        <input type="text" name="batchId" placeholder="e.g., CHEM-BKN-001" required style="margin-bottom: 0;">
+        <button type="submit" class="btn">Analyze Lineage</button>
+    </form>
+</section>
+
+<section class="grid">
+    <div class="card">
+        <h3>Add New Chemical Batch</h3>
+        <form action="/chemicals" method="POST">
+            <input type="text" name="batch_id" placeholder="Batch ID (e.g. CHEM-5512)" required>
+            <input type="text" name="type" placeholder="Type (Fertilizer/Pesticide)" required>
+            <input type="text" name="manufacturer" placeholder="Manufacturer" required>
+            <select name="status" style="width: 100%; padding: 0.75rem; margin-bottom: 1rem;">
+                <option value="OK">OK</option>
+                <option value="RECALLED">RECALLED</option>
+            </select>
+            <button type="submit" class="btn">Add Chemical</button>
+        </form>
+    </div>
+
+    <div class="card" style="grid-column: span 2;">
+        <h3>Existing Inventory</h3>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 2px solid var(--border-color);">
+                    <th>Batch ID</th>
+                    <th>Type</th>
+                    <th>Manufacturer</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each chemicals}}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.5rem 0;"><strong>{{this.batch_id}}</strong></td>
+                    <td>{{this.type}}</td>
+                    <td>{{this.manufacturer}}</td>
+                    <td>
+                        <span style="color: {{#if (eq this.status 'RECALLED')}}var(--danger-color){{else}}var(--success-color){{/if}};">
+                            {{this.status}}
+                        </span>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="/trace?batchId={{this.batch_id}}" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background-color: var(--primary-light); text-decoration: none;">Trace Path</a>
+                            <form action="/chemicals/update-status" method="POST" style="display: inline;">
+                                <input type="hidden" name="batch_id" value="{{this.batch_id}}">
+                                <input type="hidden" name="status" value="{{#if (eq this.status 'RECALLED')}}OK{{else}}RECALLED{{/if}}">
+                                <button type="submit" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">Toggle Status</button>
+                            </form>
+                            <form action="/chemicals/delete" method="POST" style="display: inline;">
+                                <input type="hidden" name="batch_id" value="{{this.batch_id}}">
+                                <button type="submit" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background-color: var(--danger-color);">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</section>
