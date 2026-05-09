@@ -45,17 +45,33 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             },
             groups: {
-                Farm: { color: { background: '#81c784', border: '#2e7d32' } },
-                CropBatch: { color: { background: '#aed581', border: '#558b2f' } },
-                ProcessingFacility: { color: { background: '#ffd54f', border: '#f9a825' } },
-                RetailMarket: { color: { background: '#64b5f6', border: '#1565c0' }, shape: 'diamond', size: 30 }
+                Farm: { 
+                    shape: 'hexagon',
+                    color: { background: '#81c784', border: '#2e7d32' },
+                    size: 30 
+                },
+                CropBatch: { 
+                    shape: 'box',
+                    color: { background: '#aed581', border: '#558b2f' },
+                    font: { size: 12 }
+                },
+                ProcessingFacility: { 
+                    shape: 'square',
+                    color: { background: '#ffd54f', border: '#f9a825' },
+                    size: 30
+                },
+                RetailMarket: { 
+                    shape: 'star',
+                    color: { background: '#64b5f6', border: '#1565c0' },
+                    size: 40 
+                }
             },
             physics: {
                 enabled: true,
                 stabilization: { iterations: 150 },
                 barnesHut: {
-                    gravitationalConstant: -2000,
-                    springLength: 150
+                    gravitationalConstant: -4000,
+                    springLength: 250
                 }
             }
         };

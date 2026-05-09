@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0-Alpha+202605091605] - 2026-05-09
+
+### ADDED
+- Hot-reloading support via `nodemon` for improved development workflow.
+
+### FIXED
+- Redundant 'Quick Trace' section removed from Chemical Management dashboard for a cleaner UI.
+- Footer layout converted to sticky to ensure it remains at the bottom of the viewport.
+- Dedicated professional styling for the footer to improve visual hierarchy and separation.
+
 ### FIXED
 - Chemical node label visibility: Changed font color from white to dark grey (#212121) so text is visible against the white dashboard background.
 
