@@ -2,6 +2,15 @@
     <h2>Lineage Analysis: {{productName}}</h2>
     <p>Batch ID: <strong id="batch-id-display">{{batchId}}</strong></p>
     <p>Current Status: <span style="font-weight: bold; color: {{#if isRecalled}}var(--danger-color){{else}}var(--success-color){{/if}};">{{chemicalStatus}}</span></p>
+    
+    <div style="margin-top: 1rem; font-size: 0.9rem;">
+        <strong>Industrial Raw Ingredients:</strong>
+        {{#each rawMaterials}}
+            <span style="background: var(--secondary-color); padding: 2px 8px; border-radius: 12px; margin-left: 5px; border: 1px solid var(--border-color);">{{this}}</span>
+        {{else}}
+            <span class="text-light">No multi-tier raw material data available.</span>
+        {{/each}}
+    </div>
 </section>
 
 <section class="card">
@@ -17,7 +26,18 @@
                 <div class="card" style="border-left: 5px solid var(--danger-color);">
                     <h3 style="color: var(--danger-color);">URGENT RECALL: {{this.market_name}}</h3>
                     <p><strong>Address:</strong> {{this.market_address}}</p>
-                    <p><strong>Affected Crop Batch:</strong> {{this.crop_batch}}</p>
+                    <p><strong>Affected Crop:</strong> <strong>{{this.crop_type}}</strong> (Batch: {{this.crop_batch}})</p>
+                    
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border-color);">
+                        <h4 style="font-size: 0.9rem; color: var(--success-color);">🛡️ Recommended Safe Alternatives:</h4>
+                        <ul style="list-style: none; margin-top: 0.5rem; font-size: 0.85rem;">
+                            {{#each this.alternatives}}
+                                <li style="margin-bottom: 0.25rem;">📍 <strong>{{this.name}}</strong> - {{this.location}}</li>
+                            {{else}}
+                                <li style="color: var(--text-light);">No safe alternative sources found in the current region.</li>
+                            {{/each}}
+                        </ul>
+                    </div>
                 </div>
             {{/each}}
         </div>
@@ -34,7 +54,7 @@
 {{/if}}
 
 <div style="margin-top: 1rem;">
-    <a href="/chemicals" class="btn" style="text-decoration: none; display: inline-block;">Back to Inventory</a>
+    <a href="/" class="btn" style="text-decoration: none; display: inline-block;">Back to Inventory</a>
 </div>
 
 <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>

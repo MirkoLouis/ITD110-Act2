@@ -1,6 +1,7 @@
 const express = require('express');
 const { engine } = require('express-handlebars');
 const path = require('path');
+const fileUpload = require('express-fileupload');
 const { runQuery } = require('./db');
 require('dotenv').config();
 
@@ -22,12 +23,24 @@ app.set('views', path.join(__dirname, 'views'));
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
+app.use(fileUpload());
 
 // --- ROUTES ---
 
-// Homepage Redirect to Chemicals Inventory
-app.get('/', (req, res) => {
-    res.redirect('/chemicals');
+// Homepage: List Chemicals (Root)
+app.get('/', async (req, res) => {
+    try {
+        const cypher = 'MATCH (c:AgriChemical) RETURN c ORDER BY c.batch_id';
+        const result = await runQuery(cypher);
+        const chemicals = result.records.map(r => r.get('c').properties);
+        res.render('chemicals/list', { 
+            chemicals,
+            restored: req.query.restored === 'true'
+        });
+    } catch (error) {
+        console.error('List Chemicals Error:', error);
+        res.status(500).send('Error loading chemical inventory.');
+    }
 });
 
 // Trace Analysis Route (HTML Results)
@@ -36,7 +49,11 @@ app.get('/trace', async (req, res) => {
     console.log(`Trace requested for batch: ${batchId}`);
     
     try {
-        const statusQuery = 'MATCH (c:AgriChemical {batch_id: $batchId}) RETURN c.status AS status, c.product_name AS name';
+        const statusQuery = `
+            MATCH (c:AgriChemical {batch_id: $batchId}) 
+            OPTIONAL MATCH (r:RawMaterial)-[:SUPPLIED_TO]->(c)
+            RETURN c.status AS status, c.product_name AS name, collect(r.name) AS raw_materials
+        `;
         const statusResult = await runQuery(statusQuery, { batchId });
         
         if (statusResult.records.length === 0) {
@@ -45,27 +62,59 @@ app.get('/trace', async (req, res) => {
 
         const chemicalStatus = statusResult.records[0].get('status');
         const productName = statusResult.records[0].get('name') || 'Unknown Product';
+        const rawMaterials = statusResult.records[0].get('raw_materials');
 
-        // Find affected markets (only if status is RECALLED)
+        // Find affected markets and the crops they received from the toxic source
         const cypher = `
             MATCH (toxic:AgriChemical {batch_id: $batchId})
             <-[:APPLIED]-(farm:Farm)
             -[:PRODUCED]->(crop:CropBatch)
             -[*1..4]->(market:RetailMarket)
-            RETURN DISTINCT market.name AS market_name, market.address AS market_address, crop.batch_id AS crop_batch
+            RETURN DISTINCT 
+                market.market_id AS market_id, 
+                market.name AS market_name, 
+                market.address AS market_address, 
+                crop.crop_type AS crop_type, 
+                crop.batch_id AS crop_batch
         `;
 
         const result = await runQuery(cypher, { batchId });
-        const affectedMarkets = result.records.map(record => ({
-            market_name: record.get('market_name'),
-            market_address: record.get('market_address'),
-            crop_batch: record.get('crop_batch')
-        }));
+        const affectedMarkets = [];
+
+        // For each affected market, find alternative safe sources for that specific crop
+        for (const record of result.records) {
+            const mId = record.get('market_id');
+            const cType = record.get('crop_type');
+
+            const altQuery = `
+                MATCH (safe_farm:Farm)-[:PRODUCED]->(safe_batch:CropBatch {crop_type: $cType})
+                WHERE NOT EXISTS {
+                    MATCH (safe_farm)-[:APPLIED]->(bad:AgriChemical {status: 'RECALLED'})
+                }
+                RETURN DISTINCT safe_farm.owner_name AS name, safe_farm.location AS location
+                LIMIT 3
+            `;
+            const altResult = await runQuery(altQuery, { cType });
+            const alternatives = altResult.records.map(r => ({
+                name: r.get('name'),
+                location: r.get('location')
+            }));
+
+            affectedMarkets.push({
+                market_id: mId,
+                market_name: record.get('market_name'),
+                market_address: record.get('market_address'),
+                crop_type: cType,
+                crop_batch: record.get('crop_batch'),
+                alternatives
+            });
+        }
 
         res.render('results', { 
             batchId, 
             productName, 
             chemicalStatus, 
+            rawMaterials,
             isRecalled: chemicalStatus === 'RECALLED',
             affectedMarkets 
         });
@@ -75,11 +124,10 @@ app.get('/trace', async (req, res) => {
     }
 });
 
-// API endpoint for Graph Visualization - More Robust Version
+// API endpoint for Graph Visualization
 app.get('/api/trace-graph', async (req, res) => {
     const { batchId } = req.query;
     
-    // Improved Cypher: Get the chemical and all downstream paths, even if they don't reach a market.
     const cypher = `
         MATCH (c:AgriChemical {batch_id: $batchId})
         OPTIONAL MATCH path = (c)<-[:APPLIED]-(farm)-[:PRODUCED|PROCESSED_AT|DISTRIBUTED_TO*0..5]->(downstream)
@@ -96,12 +144,11 @@ app.get('/api/trace-graph', async (req, res) => {
             const chemNode = record.get('c');
             const path = record.get('path');
 
-            // Always add the starting chemical node
             nodes.set(chemNode.elementId, { 
                 id: chemNode.elementId, 
                 label: chemNode.labels[0] + ": " + (chemNode.properties.product_name || chemNode.properties.batch_id),
                 group: chemNode.labels[0],
-                status: chemNode.properties.status // Pass status for custom coloring
+                status: chemNode.properties.status
             });
 
             if (path) {
@@ -141,19 +188,31 @@ app.get('/api/trace-graph', async (req, res) => {
     }
 });
 
-// JSON Backup Feature
+// JSON Backup Feature (Full Graph Export)
 app.get('/api/backup', async (req, res) => {
-    const cypher = 'MATCH (n) OPTIONAL MATCH (n)-[r]->(m) RETURN n, r, m';
     try {
-        const result = await runQuery(cypher);
-        const backupData = result.records.map(record => ({
-            node: { labels: record.get('n').labels, properties: record.get('n').properties },
-            relationship: record.get('r') ? {
-                type: record.get('r').type,
-                properties: record.get('r').properties,
-                to: { labels: record.get('m').labels, properties: record.get('m').properties }
-            } : null
-        }));
+        const nodesResult = await runQuery('MATCH (n) RETURN n');
+        const nodes = nodesResult.records.map(r => {
+            const node = r.get('n');
+            return {
+                id: node.elementId,
+                labels: node.labels,
+                properties: node.properties
+            };
+        });
+
+        const relsResult = await runQuery('MATCH (n)-[r]->(m) RETURN r, n, m');
+        const relationships = relsResult.records.map(r => {
+            const rel = r.get('r');
+            return {
+                type: rel.type,
+                properties: rel.properties,
+                fromId: r.get('n').elementId,
+                toId: r.get('m').elementId
+            };
+        });
+
+        const backupData = { nodes, relationships };
 
         res.setHeader('Content-disposition', 'attachment; filename=agrichain_backup.json');
         res.setHeader('Content-type', 'application/json');
@@ -164,20 +223,42 @@ app.get('/api/backup', async (req, res) => {
     }
 });
 
-// --- CRUD OPERATIONS ---
+// JSON Restore Feature (Full Graph Import)
+app.post('/api/restore', async (req, res) => {
+    if (!req.files || !req.files.backupFile) {
+        return res.status(400).send('No backup file uploaded.');
+    }
 
-// List Chemicals
-app.get('/chemicals', async (req, res) => {
     try {
-        const cypher = 'MATCH (c:AgriChemical) RETURN c ORDER BY c.batch_id';
-        const result = await runQuery(cypher);
-        const chemicals = result.records.map(r => r.get('c').properties);
-        res.render('chemicals/list', { chemicals });
+        const backupData = JSON.parse(req.files.backupFile.data.toString());
+        
+        await runQuery('MATCH (n) DETACH DELETE n');
+
+        for (const node of backupData.nodes) {
+            const labels = node.labels.join(':');
+            const query = `CREATE (n:${labels} $props) SET n._old_id = $oldId`;
+            await runQuery(query, { props: node.properties, oldId: node.id });
+        }
+
+        for (const rel of backupData.relationships) {
+            const query = `
+                MATCH (a), (b)
+                WHERE a._old_id = $fromId AND b._old_id = $toId
+                CREATE (a)-[r:${rel.type} $props]->(b)
+            `;
+            await runQuery(query, { fromId: rel.fromId, toId: rel.toId, props: rel.properties });
+        }
+
+        await runQuery('MATCH (n) REMOVE n._old_id');
+
+        res.redirect('/?restored=true');
     } catch (error) {
-        console.error('List Chemicals Error:', error);
-        res.status(500).send('Error loading chemical inventory.');
+        console.error('Restore Error:', error);
+        res.status(500).send('Failed to restore backup. Ensure the file is a valid AgriChain backup.');
     }
 });
+
+// --- CRUD OPERATIONS ---
 
 // Create Chemical
 app.post('/chemicals', async (req, res) => {
@@ -185,7 +266,7 @@ app.post('/chemicals', async (req, res) => {
     try {
         const cypher = 'CREATE (c:AgriChemical {batch_id: $batch_id, type: $type, manufacturer: $manufacturer, status: $status})';
         await runQuery(cypher, { batch_id, type, manufacturer, status });
-        res.redirect('/chemicals');
+        res.redirect('/');
     } catch (error) {
         console.error('Create Chemical Error:', error);
         res.status(500).send('Error creating chemical batch.');
@@ -198,7 +279,7 @@ app.post('/chemicals/update-status', async (req, res) => {
     try {
         const cypher = 'MATCH (c:AgriChemical {batch_id: $batch_id}) SET c.status = $status';
         await runQuery(cypher, { batch_id, status });
-        res.redirect('/chemicals');
+        res.redirect('/');
     } catch (error) {
         console.error('Update Status Error:', error);
         res.status(500).send('Error updating chemical status.');
@@ -211,7 +292,7 @@ app.post('/chemicals/delete', async (req, res) => {
     try {
         const cypher = 'MATCH (c:AgriChemical {batch_id: $batch_id}) DETACH DELETE c';
         await runQuery(cypher, { batch_id });
-        res.redirect('/chemicals');
+        res.redirect('/');
     } catch (error) {
         console.error('Delete Chemical Error:', error);
         res.status(500).send('Error deleting chemical batch.');

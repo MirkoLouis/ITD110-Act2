@@ -1,40 +1,39 @@
-# AgriChain: Project Overview & Context
+# AgriChain: Supply Chain Threat Intelligence
 
-## The What
-AgriChain is a graph-driven, farm-to-table traceability and threat intelligence web application. It models the agricultural economy of Northern Mindanao (tracking commodities like Saba bananas and coconuts) as a living web rather than a static list of transactions.
+## The Vision
+AgriChain is a **Supply Chain Threat Intelligence Platform** designed to solve the "Black Box" problem in food safety. In modern agriculture, traceability is often fragmented; if a consumer gets sick from a tomato in Iligan City, identifying the root cause—whether it was the farm, the pesticide, or the industrial ingredients in the fertilizer—is traditionally a massive data challenge.
 
-It tracks:
-1. Physical movement of crops from specific farm lots to retail markets.
-2. Inputs like fertilizer and pesticide batches applied to farm lots.
+AgriChain provides **Total Visibility** by modeling the entire agricultural economy of Northern Mindanao as a living, interconnected graph.
 
-### The Core Deliverable
-A "Contamination Blast Radius" tool. If a chemical batch is found toxic, the system traces it through the entire supply chain to output a definitive list of retail markets requiring an immediate recall.
+## The Problem: The "Black Box"
+Traditional supply chain systems rely on Relational Databases (SQL). When a contamination event occurs, tracing a path through multiple tiers (Raw Materials -> Chemicals -> Farms -> Processors -> Markets) requires deep, recursive joins. 
 
-## The Why: The Neo4j Justification
-When compared to traditional SQL, Neo4j offers significant advantages for this use case:
+**Why SQL Struggles:** 
+In SQL, data lives in separate tables. To trace a path, the database must perform a "JOIN" at query time. Computing these connections "on the fly" across millions of rows takes immense processing power. Deep chains require complex "Recursive CTEs" that exponentially slow down the server. It's like having to read the entire city map at every single intersection.
 
-### The SQL Nightmare (Recursive CTEs)
-In SQL, tracing a toxic fertilizer requires multiple complex joins (Chemicals -> Farms -> Harvests -> Processors -> Markets). If data branches, recursive CTEs are required. These are:
-- Computationally heavy.
-- Difficult to maintain (hundreds of lines of code).
-- Slower as the database grows due to read-time relationship computation.
+## The Solution: The Graph Advantage
+**Why Neo4j Wins:**
+Neo4j uses **Index-Free Adjacency**. Relationships are not computed at query time; they are physically stored as direct memory pointers on the hard drive the moment the data is saved. To trace a toxic crop to its destination, Neo4j simply follows the pre-existing pointers. It's like having a physical string tied between every connected point—you just pull the string. Tracing takes milliseconds, regardless of database size.
 
-### The Graph Advantage (Index-Free Adjacency)
-Neo4j uses index-free adjacency. Relationships are physically stored as pointers on disk.
-- **Speed:** Traversal takes milliseconds even at scale.
-- **Simplicity:** Pathfinding queries are intuitive and concise.
+## Core Capabilities
+1.  **Multi-Tier Traceability:** Trace issues back to the **Industrial Raw Materials** (Tier 3) used by chemical manufacturers.
+2.  **Affected Area Analysis:** Instantly visualize the "Impact Zone" of a contamination event, identifying every retail market requiring a recall.
+3.  **Resilience Engine:** Automatically recommend safe, alternative farm sources for specific crops during a crisis to stabilize regional food security.
 
-## Data Model (Nodes & Relationships)
+## Data Model
 
 ### Nodes
-- **AgriChemical:** batch_id, type, manufacturer, status
-- **Farm:** farm_id, owner_name, location_coordinates
+- **RawMaterial:** material_id, name, source (Industrial base ingredients)
+- **AgriChemical:** batch_id, product_name, manufacturer, status
+- **Farm:** farm_id, owner_name, location
 - **CropBatch:** batch_id, crop_type, harvest_date
 - **ProcessingFacility:** facility_id, name, type
 - **RetailMarket:** market_id, name, address
 
 ### Relationships
-- `(Farm)-[:APPLIED {date_applied}]->(AgriChemical)`
+- `(RawMaterial)-[:SUPPLIED_TO]->(AgriChemical)`
+- `(Farm)-[:APPLIED]->(AgriChemical)`
 - `(Farm)-[:PRODUCED]->(CropBatch)`
-- `(CropBatch)-[:PROCESSED_AT {arrival_date}]->(ProcessingFacility)`
-- `(ProcessingFacility)-[:DISTRIBUTED_TO {delivery_date}]->(RetailMarket)`
+- `(CropBatch)-[:PROCESSED_AT]->(ProcessingFacility)`
+- `(CropBatch)-[:DISTRIBUTED_TO]->(RetailMarket)`
+- `(ProcessingFacility)-[:DISTRIBUTED_TO]->(RetailMarket)`

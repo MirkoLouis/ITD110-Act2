@@ -1,11 +1,11 @@
 const { runQuery, driver } = require('../src/db');
 
 /**
- * Seed data for AgriChain project - v1.6.1 Diversified Distribution Dataset (Fixed Cypher).
- * Ensures each farm distributes its 5 crop batches to 5 unique markets.
+ * Seed data for AgriChain project - v1.8 Multi-Tier Industry Dataset.
+ * Includes Raw Materials, Chemicals, Farms, Markets, and Processing.
  */
 const seedData = async () => {
-    console.log('--- Starting Diversified Dataset Seeding ---');
+    console.log('--- Starting Multi-Tier Dataset Seeding ---');
 
     try {
         // 1. Clear all existing data
@@ -15,6 +15,14 @@ const seedData = async () => {
         // 2. Create All Nodes First
         console.log('Creating Nodes...');
         await runQuery(`
+            // Raw Materials (Tier 3)
+            CREATE (:RawMaterial {material_id: 'RAW-AMM-001', name: 'Industrial Ammonia', source: 'Natural Gas Synthesis'})
+            CREATE (:RawMaterial {material_id: 'RAW-POT-002', name: 'Mined Potash', source: 'Saskatchewan Mines'})
+            CREATE (:RawMaterial {material_id: 'RAW-SUL-003', name: 'Elemental Sulfur', source: 'Oil Refinery Byproduct'})
+            CREATE (:RawMaterial {material_id: 'RAW-PHO-004', name: 'Rock Phosphate', source: 'Morocco Deposits'})
+            CREATE (:RawMaterial {material_id: 'RAW-SYN-005', name: 'Synthetic Fungicide Base', source: 'German Lab Complex'})
+            CREATE (:RawMaterial {material_id: 'RAW-CLO-006', name: 'Chlorine Gas', source: 'Electrolysis Plant'})
+
             // Chemicals (10)
             CREATE (:AgriChemical {batch_id: 'CHEM-BKN-001', type: 'Fertilizer', manufacturer: 'AgriGrow Solutions', product_name: 'Ammonium Sulfate (21-0-0)', status: 'OK'})
             CREATE (:AgriChemical {batch_id: 'CHEM-MIS-002', type: 'Fertilizer', manufacturer: 'BioShield Inc', product_name: 'Potassium Chloride (0-0-60)', status: 'RECALLED'})
@@ -69,6 +77,22 @@ const seedData = async () => {
             CREATE (:ProcessingFacility {facility_id: 'PROC-ILG-KAPE', name: 'Agri-Rainbow Coffee Plant', location: 'Iligan City', type: 'Coffee & Spice Processing'})
         `);
 
+        // 3. Establish Multi-Tier Supply Relationships (Raw Material -> Chemical)
+        console.log('Establishing Industrial Supply Chain (Raw Materials -> Chemicals)...');
+        await runQuery(`
+            MATCH (r:RawMaterial {material_id: 'RAW-AMM-001'}), (c:AgriChemical {batch_id: 'CHEM-BKN-001'}) CREATE (r)-[:SUPPLIED_TO]->(c)
+            WITH 1 as dummy
+            MATCH (r:RawMaterial {material_id: 'RAW-POT-002'}), (c:AgriChemical {batch_id: 'CHEM-MIS-002'}) CREATE (r)-[:SUPPLIED_TO]->(c)
+            WITH 1 as dummy
+            MATCH (r:RawMaterial {material_id: 'RAW-SUL-003'}), (c:AgriChemical {batch_id: 'CHEM-BKN-001'}) CREATE (r)-[:SUPPLIED_TO]->(c)
+            WITH 1 as dummy
+            MATCH (r:RawMaterial {material_id: 'RAW-PHO-004'}), (c:AgriChemical {batch_id: 'CHEM-COMP-007'}) CREATE (r)-[:SUPPLIED_TO]->(c)
+            WITH 1 as dummy
+            MATCH (r:RawMaterial {material_id: 'RAW-SYN-005'}), (c:AgriChemical {batch_id: 'CHEM-PEST-004'}) CREATE (r)-[:SUPPLIED_TO]->(c)
+            WITH 1 as dummy
+            MATCH (r:RawMaterial {material_id: 'RAW-CLO-006'}), (c:AgriChemical {batch_id: 'CHEM-CHL-010'}) CREATE (r)-[:SUPPLIED_TO]->(c)
+        `);
+
         const farmIds = [
             'FARM-LDN-BARCOCO', 'FARM-LDN-SIMBUCO', 'FARM-LDN-LASEMCO', 'FARM-MIS-CLAVERIA',
             'FARM-MIS-DAIRY', 'FARM-MIS-KAMADA', 'FARM-BKN-MANOLO', 'FARM-BKN-COPOMA',
@@ -86,9 +110,9 @@ const seedData = async () => {
             'PROC-TAG-GARDENIA', 'PROC-TAG-OISHI', 'PROC-BKN-HUB', 'PROC-LDN-MILK', 'PROC-ILG-KAPE'
         ];
 
-        const crops = ['Saba Banana', 'Coconut', 'Yellow Corn', 'Fresh Milk', 'Carrots', 'Rice', 'Coffee', 'Cassava', 'Vegetables', 'Pineapple'];
+        const crops = ['Saba Banana', 'Coconut', 'Yellow Corn', 'Fresh Milk', 'Rice', 'Carrots', 'Pechay', 'Eggplant', 'Tomato', 'Bell Pepper', 'Pineapple'];
 
-        // 3. Create Crop Batches and Link to Unique Markets
+        // 4. Create Crop Batches and Link to Unique Markets
         console.log('Generating 75 Crop Batches with Diversified Distribution...');
         for (let f = 0; f < farmIds.length; f++) {
             const farmId = farmIds[f];
@@ -97,13 +121,10 @@ const seedData = async () => {
                 const batchId = `BATCH-${farmId.split('-')[2]}-${i + 1}`;
                 const cropType = crops[Math.floor(Math.random() * crops.length)];
                 
-                // Select a unique market for this batch
                 const marketId = marketIds[(f + i) % marketIds.length];
                 const facilityId = facilityIds[(f + i) % facilityIds.length];
 
-                // Simplified Cypher without conditional CALL { UNION } inside loop
                 if (i % 2 === 0) {
-                    // Via Processing
                     await runQuery(`
                         MATCH (f:Farm {farm_id: $farmId}), (m:RetailMarket {market_id: $marketId}), (p:ProcessingFacility {facility_id: $facilityId})
                         CREATE (b:CropBatch {batch_id: $batchId, crop_type: $cropType, harvest_date: $date})
@@ -112,7 +133,6 @@ const seedData = async () => {
                         CREATE (p)-[:DISTRIBUTED_TO]->(m)
                     `, { farmId, batchId, cropType, date, marketId, facilityId });
                 } else {
-                    // Direct to Market
                     await runQuery(`
                         MATCH (f:Farm {farm_id: $farmId}), (m:RetailMarket {market_id: $marketId})
                         CREATE (b:CropBatch {batch_id: $batchId, crop_type: $cropType, harvest_date: $date})
@@ -123,7 +143,7 @@ const seedData = async () => {
             }
         }
 
-        // 4. Apply Chemicals to Farms
+        // 5. Apply Chemicals to Farms
         console.log('Applying Chemicals to Farms...');
         const chemicalIds = [
             'CHEM-BKN-001', 'CHEM-MIS-002', 'CHEM-BKN-003', 'CHEM-PEST-004', 'CHEM-PEST-005',
@@ -139,7 +159,6 @@ const seedData = async () => {
             `, { chemId, farmId });
         }
 
-        // Ensure every farm has at least one chemical applied for trace testing
         for (let i = chemicalIds.length; i < farmIds.length; i++) {
             const farmId = farmIds[i];
             const chemId = chemicalIds[i % chemicalIds.length];
@@ -149,7 +168,7 @@ const seedData = async () => {
             `, { chemId, farmId });
         }
 
-        console.log('--- Diversified Dataset Seeding Completed Successfully ---');
+        console.log('--- Multi-Tier Dataset Seeding Completed Successfully ---');
     } catch (error) {
         console.error('Seed Error:', error);
     } finally {

@@ -1,8 +1,30 @@
 <section class="card">
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h2>AgriChemical Management</h2>
-        <a href="/api/backup" class="btn" style="background-color: var(--secondary-color); color: var(--text-color); border: 1px solid var(--border-color);">📥 Download JSON Backup</a>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="/api/backup" class="btn" style="background-color: var(--secondary-color); color: var(--text-color); border: 1px solid var(--border-color);">📥 Download JSON Backup</a>
+            <form action="/api/restore" method="POST" enctype="multipart/form-data" style="display: flex; gap: 0.5rem; margin-bottom: 0;">
+                <input type="file" name="backupFile" accept=".json" required style="margin-bottom: 0; width: auto; font-size: 0.8rem; padding: 0.5rem;">
+                <button type="submit" class="btn" style="background-color: var(--primary-light);">📤 Restore Data</button>
+            </form>
+        </div>
     </div>
+</section>
+
+{{#if restored}}
+    <section class="card" style="background-color: var(--success-color); color: white; border: none; padding: 1rem;">
+        <strong>✓ Success!</strong> The graph database has been successfully restored from the backup file.
+    </section>
+{{/if}}
+
+<!-- Quick Trace Section -->
+<section class="card" style="border: 2px solid var(--primary-light);">
+    <h3>Quick Trace / Affected Area Analysis</h3>
+    <p>Select a chemical below or enter a Batch ID to visualize its supply chain lineage.</p>
+    <form action="/trace" method="GET" style="display: flex; gap: 1rem; margin-top: 1rem;">
+        <input type="text" name="batchId" placeholder="e.g., CHEM-BKN-001" required style="margin-bottom: 0;">
+        <button type="submit" class="btn">Analyze Lineage</button>
+    </form>
 </section>
 
 <section class="grid">

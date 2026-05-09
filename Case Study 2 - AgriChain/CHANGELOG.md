@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.1-Alpha+202605091800] - 2026-05-09
+
+### ADDED
+- **Graph Restore Feature:** Users can now upload a previously exported AgriChain JSON backup to fully restore the graph database.
+- **Robust Export Engine:** Optimized the JSON export logic to include distinct nodes and relationships with stable internal ID mapping for seamless restoration.
+- **Restoration UI:** Added a file upload component and success feedback to the main dashboard.
+
+## [0.8.0-Alpha+202605091730] - 2026-05-09
+
+### ADDED
+- **Multi-Tier Traceability:** Introduced `RawMaterial` (Tier 3) nodes to track industrial ingredients supplied to chemical manufacturers.
+- **Affected Area Analysis:** Rebranded "Blast Radius" to "Affected Area" for professional clarity.
+- **Deep Lineage Summary:** The trace dashboard now displays industrial raw materials for each chemical batch.
+- **Vision Overhaul:** Major documentation rewrite incorporating the project's strategic identity and Neo4j performance justification.
+
+### FIXED
+- **Homepage Consolidation:** Chemical Management is now served directly at the root URL (`/`).
+- **Route Optimization:** Removed redundant `/chemicals` route and updated all CRUD redirects.
+
+## [0.7.0-Alpha+202605091700] - 2026-05-09
+
+### ADDED
+- **Alternative Sourcing Engine:** The system now proactively recommends safe, alternative farm sources for markets affected by a chemical recall.
+- **Intelligent Pattern Matching:** Leverages Neo4j's `shortestPath` and exclusionary filtering to ensure suggested farms are free from contamination.
+- **Refined Data Context:** Granular crop type specification (e.g., Pechay, Tomato, Eggplant) replacing generic categories for more precise alternative sourcing.
+- **Enhanced Trace Results UI:** New visualization for "Safe Alternatives" within the lineage analysis dashboard.
+
 ## [0.6.0-Alpha+202605091630] - 2026-05-09
 
 ### ADDED
