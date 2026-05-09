@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0-Alpha+202605091630] - 2026-05-09
+
+### ADDED
+- Massive dataset expansion:
+    - 10 Realistic AgriChemicals (Fertilizers, Pesticides, Herbicides).
+    - 15 Unique Retail Markets in Iligan City (Public markets, Supermarkets, and local stores).
+    - 15 Farms and Cooperatives across Northern Mindanao (Bukidnon, Misamis Oriental, Lanao del Norte).
+    - 75 Crop Batches (5 batches per farm) spanning 5 days from 2026-05-09 to 2026-05-13.
+- Verified 100% path connectivity: Every chemical batch is linked to at least one farm, and every farm's crops are traced to a market.
+- Real-world data integration for improved authenticity and testing robustness.
+
 ## [0.5.0-Alpha+202605091605] - 2026-05-09
 
 ### ADDED
