@@ -1,42 +1,56 @@
+{{!-- This page shows the results of our "Trace" analysis. It explains 
+      exactly where a chemical went and which markets are affected. --}}
+
+<div style="margin-bottom: 1.5rem;">
+    <a href="/" class="btn" style="text-decoration: none; display: inline-block; background-color: var(--secondary-color); color: var(--text-color); border: 1px solid var(--border-color);">← Go back to homepage</a>
+</div>
+
+{{!-- Summary Card: Displays basic info about the chemical we are tracing.
+      The data comes from the Trace Analysis route in src/app.js. --}}
 <section class="card" style="border-left: 10px solid {{#if isRecalled}}var(--danger-color){{else}}var(--success-color){{/if}};">
     <h2>Lineage Analysis: {{productName}}</h2>
     <p>Batch ID: <strong id="batch-id-display">{{batchId}}</strong></p>
     <p>Current Status: <span style="font-weight: bold; color: {{#if isRecalled}}var(--danger-color){{else}}var(--success-color){{/if}};">{{chemicalStatus}}</span></p>
-    
-    <div style="margin-top: 1rem; font-size: 0.9rem;">
-        <strong>Industrial Raw Ingredients:</strong>
-        {{#each rawMaterials}}
-            <span style="background: var(--secondary-color); padding: 2px 8px; border-radius: 12px; margin-left: 5px; border: 1px solid var(--border-color);">{{this}}</span>
-        {{else}}
-            <span class="text-light">No multi-tier raw material data available.</span>
-        {{/each}}
-    </div>
 </section>
 
+{{!-- Graph Section: This empty 'div' is filled by the script src/public/js/graph.js. 
+      It provides a visual map of the entire supply chain path. --}}
 <section class="card">
     <h3>Supply Chain Lineage Mapping (Interactive Graph)</h3>
     <div id="graph-container"></div>
-    <p class="text-light" style="font-size: 0.8rem; margin-top: 0.5rem;">Red nodes indicate potential contamination points. Blue nodes represent end-point retail markets.</p>
+    <div class="text-light" style="font-size: 0.8rem; margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 1rem;">
+        <span><span style="color: #d32f2f;">●</span> <strong>Red/Green:</strong> Chemical Status</span>
+        <span><span style="color: #81c784;">⬢</span> <strong>Hexagons:</strong> Farms</span>
+        <span><span style="color: #64b5f6;">★</span> <strong>Blue Stars:</strong> Retail Markets (Endpoints)</span>
+    </div>
 </section>
 
+{{!-- Recall Alerts: If a chemical is RECALLED, we show a list of every market 
+      that might have received contaminated crops. --}}
 {{#if isRecalled}}
     {{#if affectedMarkets.length}}
-        <div class="grid">
+        <div class="recall-grid">
             {{#each affectedMarkets}}
-                <div class="card" style="border-left: 5px solid var(--danger-color);">
-                    <h3 style="color: var(--danger-color);">URGENT RECALL: {{this.market_name}}</h3>
-                    <p><strong>Address:</strong> {{this.market_address}}</p>
-                    <p><strong>Affected Crop:</strong> <strong>{{this.crop_type}}</strong> (Batch: {{this.crop_batch}})</p>
+                <div class="card recall-card" style="border-left: 5px solid var(--danger-color); padding: 1rem;">
+                    {{!-- Top Section: Market & Crop Info (Standardized to 6 lines total) --}}
+                    <h4 class="line-limit-1" style="color: var(--danger-color); margin-bottom: 0.25rem;">URGENT RECALL</h4>
+                    <h3 class="line-limit-1" style="margin-bottom: 0.25rem;">{{this.market_name}}</h3>
+                    <p class="line-limit-1 text-small" style="margin-bottom: 0.25rem;"><strong>📍</strong> {{this.market_address}}</p>
+                    <p class="line-limit-2 text-small"><strong>Affected:</strong> {{this.crop_type}}<br><span class="text-light">({{this.crop_batch}})</span></p>
                     
-                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--border-color);">
-                        <h4 style="font-size: 0.9rem; color: var(--success-color);">🛡️ Recommended Safe Alternatives:</h4>
-                        <ul style="list-style: none; margin-top: 0.5rem; font-size: 0.85rem;">
+                    {{!-- Bottom Section: Recommendations (Standardized to 1 + 6 lines) --}}
+                    <div style="border-top: 1px dashed var(--border-color);">
+                        <h4 class="line-limit-1" style="font-size: 0.8rem; color: var(--success-color); margin-bottom: 0.5rem; margin-top: 0.5rem;">🛡️ Safe Alternatives:</h4>
+                        <div class="text-small">
                             {{#each this.alternatives}}
-                                <li style="margin-bottom: 0.25rem;">📍 <strong>{{this.name}}</strong> - {{this.location}}</li>
+                                <div class="line-limit-2" style="margin-bottom: 0.4rem;">
+                                    <strong>•</strong> {{this.name}}
+                                    <div class="text-light" style="font-size: 0.75rem; margin-left: 0.7rem;">{{this.location}}</div>
+                                </div>
                             {{else}}
-                                <li style="color: var(--text-light);">No safe alternative sources found in the current region.</li>
+                                <p class="text-light">No safe sources found.</p>
                             {{/each}}
-                        </ul>
+                        </div>
                     </div>
                 </div>
             {{/each}}
@@ -47,15 +61,13 @@
         </section>
     {{/if}}
 {{else}}
+    {{!-- Safe Message: If the chemical is OK, we reassure the user. --}}
     <section class="card" style="border-left: 5px solid var(--success-color);">
         <h3 style="color: var(--success-color);">✓ Safe Supply Chain</h3>
         <p>This chemical batch is currently marked as <strong>OK</strong>. The visualization above shows its normal distribution path through Northern Mindanao.</p>
     </section>
 {{/if}}
 
-<div style="margin-top: 1rem;">
-    <a href="/" class="btn" style="text-decoration: none; display: inline-block;">Back to Inventory</a>
-</div>
-
+{{!-- We load the Vis.js library first, then our custom graph script. --}}
 <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 <script src="/js/graph.js"></script>

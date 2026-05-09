@@ -1,41 +1,34 @@
 const { runQuery, driver } = require('../src/db');
 
 /**
- * Seed data for AgriChain project - v1.8 Multi-Tier Industry Dataset.
- * Includes Raw Materials, Chemicals, Farms, Markets, and Processing.
+ * Seed data for AgriChain project - v2.0 Simplified Traceability.
+ * Focused on Farm-to-Table paths for easy verification and clear problem solving.
  */
 const seedData = async () => {
-    console.log('--- Starting Multi-Tier Dataset Seeding ---');
+    console.log('--- Starting Simplified Dataset Seeding ---');
 
     try {
-        // 1. Clear all existing data
+        // 1. Clear all existing data for a fresh start.
         console.log('Resetting database...');
         await runQuery('MATCH (n) DETACH DELETE n');
 
-        // 2. Create All Nodes First
+        // 2. Create All Nodes. 
+        // We focus on real entities: Chemicals, Farms, Processors, and Markets.
         console.log('Creating Nodes...');
         await runQuery(`
-            // Raw Materials (Tier 3)
-            CREATE (:RawMaterial {material_id: 'RAW-AMM-001', name: 'Industrial Ammonia', source: 'Natural Gas Synthesis'})
-            CREATE (:RawMaterial {material_id: 'RAW-POT-002', name: 'Mined Potash', source: 'Saskatchewan Mines'})
-            CREATE (:RawMaterial {material_id: 'RAW-SUL-003', name: 'Elemental Sulfur', source: 'Oil Refinery Byproduct'})
-            CREATE (:RawMaterial {material_id: 'RAW-PHO-004', name: 'Rock Phosphate', source: 'Morocco Deposits'})
-            CREATE (:RawMaterial {material_id: 'RAW-SYN-005', name: 'Synthetic Fungicide Base', source: 'German Lab Complex'})
-            CREATE (:RawMaterial {material_id: 'RAW-CLO-006', name: 'Chlorine Gas', source: 'Electrolysis Plant'})
-
-            // Chemicals (10)
+            // AgriChemicals (10) - Common products used in Mindanao agriculture.
             CREATE (:AgriChemical {batch_id: 'CHEM-BKN-001', type: 'Fertilizer', manufacturer: 'AgriGrow Solutions', product_name: 'Ammonium Sulfate (21-0-0)', status: 'OK'})
-            CREATE (:AgriChemical {batch_id: 'CHEM-MIS-002', type: 'Fertilizer', manufacturer: 'BioShield Inc', product_name: 'Potassium Chloride (0-0-60)', status: 'RECALLED'})
-            CREATE (:AgriChemical {batch_id: 'CHEM-BKN-003', type: 'Fertilizer', manufacturer: 'Local Salt Co', product_name: 'Common Salt (NaCl)', status: 'OK'})
+            CREATE (:AgriChemical {batch_id: 'CHEM-MIS-002', type: 'Fertilizer', manufacturer: 'BioShield Inc', product_name: 'Potassium Chloride (Muriate of Potash)', status: 'RECALLED'})
+            CREATE (:AgriChemical {batch_id: 'CHEM-BKN-003', type: 'Fertilizer', manufacturer: 'Local Salt Co', product_name: 'Agricultural Salt (NaCl)', status: 'OK'})
             CREATE (:AgriChemical {batch_id: 'CHEM-PEST-004', type: 'Fungicide', manufacturer: 'Sharphil Inc', product_name: 'Azoxystrobin (Zoxy 250 SC)', status: 'RECALLED'})
             CREATE (:AgriChemical {batch_id: 'CHEM-PEST-005', type: 'Insecticide', manufacturer: 'Link Agritech', product_name: 'Diazinon (Zenon)', status: 'OK'})
             CREATE (:AgriChemical {batch_id: 'CHEM-UREA-006', type: 'Fertilizer', manufacturer: 'Fertilizer Corp Phil', product_name: 'Urea (46-0-0)', status: 'OK'})
             CREATE (:AgriChemical {batch_id: 'CHEM-COMP-007', type: 'Fertilizer', manufacturer: 'Atlas Fertilizer', product_name: 'Complete (14-14-14)', status: 'OK'})
             CREATE (:AgriChemical {batch_id: 'CHEM-GLY-008', type: 'Herbicide', manufacturer: 'Monsanto/Bayer', product_name: 'Glyphosate (Roundup)', status: 'OK'})
-            CREATE (:AgriChemical {batch_id: 'CHEM-MAN-009', type: 'Fungicide', manufacturer: 'Dow AgroSciences', product_name: 'Mancozeb (Dithane)', status: 'RECALLED'})
-            CREATE (:AgriChemical {batch_id: 'CHEM-CHL-010', type: 'Insecticide', manufacturer: 'Global Chem', product_name: 'Chlorpyrifos', status: 'OK'})
+            CREATE (:AgriChemical {batch_id: 'CHEM-MAN-009', type: 'Fungicide', manufacturer: 'Dow AgroSciences', product_name: 'Mancozeb (Dithane M-45)', status: 'RECALLED'})
+            CREATE (:AgriChemical {batch_id: 'CHEM-CHL-010', type: 'Insecticide', manufacturer: 'Global Chem', product_name: 'Chlorpyrifos (Exterm)', status: 'OK'})
 
-            // Farms (15)
+            // Farms (15) - Real Cooperatives and Farms in Northern Mindanao.
             CREATE (:Farm {farm_id: 'FARM-LDN-BARCOCO', owner_name: 'BARCOCO Bualan Co-op', location: 'Tubod, Lanao del Norte'})
             CREATE (:Farm {farm_id: 'FARM-LDN-SIMBUCO', owner_name: 'Simbuco Aqua-Marine Co-op', location: 'Kolambugan, Lanao del Norte'})
             CREATE (:Farm {farm_id: 'FARM-LDN-LASEMCO', owner_name: 'LASEMCO Seed Growers', location: 'Kapatagan, Lanao del Norte'})
@@ -52,7 +45,7 @@ const seedData = async () => {
             CREATE (:Farm {farm_id: 'FARM-BKN-TALAHIRON', owner_name: 'Talahiron Multi-Purpose Co-op', location: 'Dangcagan, Bukidnon'})
             CREATE (:Farm {farm_id: 'FARM-ILG-IZON', owner_name: 'Izon Highland Farm', location: 'Pala-o, Iligan City'})
 
-            // Markets (15 Iligan City Markets)
+            // Markets (15 Iligan City Markets) - Local retail end-points.
             CREATE (:RetailMarket {market_id: 'MKT-ILG-PALAO', name: 'Pala-o Central Market', address: 'Pala-o, Iligan City'})
             CREATE (:RetailMarket {market_id: 'MKT-ILG-TAMBO', name: 'Tambo Public Market', address: 'Tambo, Iligan City'})
             CREATE (:RetailMarket {market_id: 'MKT-ILG-ROB', name: 'Robinsons Place Iligan', address: 'Macapagal Ave, Iligan City'})
@@ -69,7 +62,7 @@ const seedData = async () => {
             CREATE (:RetailMarket {market_id: 'MKT-ILG-DOWNTOWN', name: 'Downtown Grocery', address: 'Iligan City'})
             CREATE (:RetailMarket {market_id: 'MKT-ILG-GALAXY', name: 'Iligan Galaxy Merchandising', address: 'Iligan City'})
 
-            // Processing Facilities (5)
+            // Processing Facilities (5) - Mid-stream infrastructure.
             CREATE (:ProcessingFacility {facility_id: 'PROC-TAG-GARDENIA', name: 'Gardenia Bread Plant', location: 'PHIVIDEC, Tagoloan', type: 'Bakery Manufacturing'})
             CREATE (:ProcessingFacility {facility_id: 'PROC-TAG-OISHI', name: 'Liwayway (Oishi) Plant', location: 'PHIVIDEC, Tagoloan', type: 'Snack Food Processing'})
             CREATE (:ProcessingFacility {facility_id: 'PROC-BKN-HUB', name: 'Bukidnon Food Hub', location: 'Manolo Fortich', type: 'Agri-Logistics & Processing'})
@@ -77,22 +70,7 @@ const seedData = async () => {
             CREATE (:ProcessingFacility {facility_id: 'PROC-ILG-KAPE', name: 'Agri-Rainbow Coffee Plant', location: 'Iligan City', type: 'Coffee & Spice Processing'})
         `);
 
-        // 3. Establish Multi-Tier Supply Relationships (Raw Material -> Chemical)
-        console.log('Establishing Industrial Supply Chain (Raw Materials -> Chemicals)...');
-        await runQuery(`
-            MATCH (r:RawMaterial {material_id: 'RAW-AMM-001'}), (c:AgriChemical {batch_id: 'CHEM-BKN-001'}) CREATE (r)-[:SUPPLIED_TO]->(c)
-            WITH 1 as dummy
-            MATCH (r:RawMaterial {material_id: 'RAW-POT-002'}), (c:AgriChemical {batch_id: 'CHEM-MIS-002'}) CREATE (r)-[:SUPPLIED_TO]->(c)
-            WITH 1 as dummy
-            MATCH (r:RawMaterial {material_id: 'RAW-SUL-003'}), (c:AgriChemical {batch_id: 'CHEM-BKN-001'}) CREATE (r)-[:SUPPLIED_TO]->(c)
-            WITH 1 as dummy
-            MATCH (r:RawMaterial {material_id: 'RAW-PHO-004'}), (c:AgriChemical {batch_id: 'CHEM-COMP-007'}) CREATE (r)-[:SUPPLIED_TO]->(c)
-            WITH 1 as dummy
-            MATCH (r:RawMaterial {material_id: 'RAW-SYN-005'}), (c:AgriChemical {batch_id: 'CHEM-PEST-004'}) CREATE (r)-[:SUPPLIED_TO]->(c)
-            WITH 1 as dummy
-            MATCH (r:RawMaterial {material_id: 'RAW-CLO-006'}), (c:AgriChemical {batch_id: 'CHEM-CHL-010'}) CREATE (r)-[:SUPPLIED_TO]->(c)
-        `);
-
+        // Helper data for the remaining seeding steps.
         const farmIds = [
             'FARM-LDN-BARCOCO', 'FARM-LDN-SIMBUCO', 'FARM-LDN-LASEMCO', 'FARM-MIS-CLAVERIA',
             'FARM-MIS-DAIRY', 'FARM-MIS-KAMADA', 'FARM-BKN-MANOLO', 'FARM-BKN-COPOMA',
@@ -112,7 +90,7 @@ const seedData = async () => {
 
         const crops = ['Saba Banana', 'Coconut', 'Yellow Corn', 'Fresh Milk', 'Rice', 'Carrots', 'Pechay', 'Eggplant', 'Tomato', 'Bell Pepper', 'Pineapple'];
 
-        // 4. Create Crop Batches and Link to Unique Markets
+        // 3. Create Crop Batches and Link to Unique Markets (Downstream Traceability)
         console.log('Generating 75 Crop Batches with Diversified Distribution...');
         for (let f = 0; f < farmIds.length; f++) {
             const farmId = farmIds[f];
@@ -124,6 +102,7 @@ const seedData = async () => {
                 const marketId = marketIds[(f + i) % marketIds.length];
                 const facilityId = facilityIds[(f + i) % facilityIds.length];
 
+                // Direct to Market or via Processing logic.
                 if (i % 2 === 0) {
                     await runQuery(`
                         MATCH (f:Farm {farm_id: $farmId}), (m:RetailMarket {market_id: $marketId}), (p:ProcessingFacility {facility_id: $facilityId})
@@ -143,7 +122,7 @@ const seedData = async () => {
             }
         }
 
-        // 5. Apply Chemicals to Farms
+        // 4. Apply Chemicals to Farms (Connecting Inputs to Production)
         console.log('Applying Chemicals to Farms...');
         const chemicalIds = [
             'CHEM-BKN-001', 'CHEM-MIS-002', 'CHEM-BKN-003', 'CHEM-PEST-004', 'CHEM-PEST-005',
@@ -159,6 +138,7 @@ const seedData = async () => {
             `, { chemId, farmId });
         }
 
+        // Finalize connections so every farm has at least one chemical for testing.
         for (let i = chemicalIds.length; i < farmIds.length; i++) {
             const farmId = farmIds[i];
             const chemId = chemicalIds[i % chemicalIds.length];
@@ -168,7 +148,7 @@ const seedData = async () => {
             `, { chemId, farmId });
         }
 
-        console.log('--- Multi-Tier Dataset Seeding Completed Successfully ---');
+        console.log('--- Simplified Seeding Completed Successfully ---');
     } catch (error) {
         console.error('Seed Error:', error);
     } finally {

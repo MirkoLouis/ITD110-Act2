@@ -1,6 +1,12 @@
+{{!-- This is the Homepage. It allows users to manage their chemical inventory 
+      and start a "Trace" to see where their products are going. --}}
+
 <section class="card">
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h2>AgriChemical Management</h2>
+        
+        {{!-- Data Management: These buttons allow us to save our database progress as 
+              a JSON file or restore it later. The logic for this is in src/app.js. --}}
         <div style="display: flex; gap: 0.5rem;">
             <a href="/api/backup" class="btn" style="background-color: var(--secondary-color); color: var(--text-color); border: 1px solid var(--border-color);">📥 Download JSON Backup</a>
             <form action="/api/restore" method="POST" enctype="multipart/form-data" style="display: flex; gap: 0.5rem; margin-bottom: 0;">
@@ -11,13 +17,15 @@
     </div>
 </section>
 
+{{!-- If a user just restored a backup, we show this success message. --}}
 {{#if restored}}
     <section class="card" style="background-color: var(--success-color); color: white; border: none; padding: 1rem;">
         <strong>✓ Success!</strong> The graph database has been successfully restored from the backup file.
     </section>
 {{/if}}
 
-<!-- Quick Trace Section -->
+{{!-- Quick Trace: This is the starting point for our main feature. 
+      Entering a Batch ID here triggers the analysis logic in src/app.js. --}}
 <section class="card" style="border: 2px solid var(--primary-light);">
     <h3>Quick Trace / Affected Area Analysis</h3>
     <p>Select a chemical below or enter a Batch ID to visualize its supply chain lineage.</p>
@@ -27,7 +35,9 @@
     </form>
 </section>
 
-<section class="grid">
+<section class="dashboard-grid">
+    {{!-- Create Form: This sends data to the POST /chemicals route in src/app.js 
+          to add a new node to our Neo4j database. --}}
     <div class="card">
         <h3>Add New Chemical Batch</h3>
         <form action="/chemicals" method="POST">
@@ -42,7 +52,9 @@
         </form>
     </div>
 
-    <div class="card" style="grid-column: span 2;">
+    {{!-- Inventory Table: We use a Handlebars loop ({{#each}}) to display every 
+          chemical that was fetched from the database in src/app.js. --}}
+    <div class="card">
         <h3>Existing Inventory</h3>
         <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
             <thead>
@@ -61,18 +73,24 @@
                     <td>{{this.type}}</td>
                     <td>{{this.manufacturer}}</td>
                     <td>
+                        {{!-- We use a color code: Red for RECALLED, Green for OK. --}}
                         <span style="color: {{#if (eq this.status 'RECALLED')}}var(--danger-color){{else}}var(--success-color){{/if}};">
                             {{this.status}}
                         </span>
                     </td>
                     <td>
                         <div style="display: flex; gap: 0.5rem;">
+                            {{!-- This link takes us to the Tracing results page. --}}
                             <a href="/trace?batchId={{this.batch_id}}" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background-color: var(--primary-light); text-decoration: none;">Trace Path</a>
+                            
+                            {{!-- Toggle Status: Quickly switch between OK and RECALLED. --}}
                             <form action="/chemicals/update-status" method="POST" style="display: inline;">
                                 <input type="hidden" name="batch_id" value="{{this.batch_id}}">
                                 <input type="hidden" name="status" value="{{#if (eq this.status 'RECALLED')}}OK{{else}}RECALLED{{/if}}">
                                 <button type="submit" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">Toggle Status</button>
                             </form>
+
+                            {{!-- Delete: Removes the chemical from our Neo4j database. --}}
                             <form action="/chemicals/delete" method="POST" style="display: inline;">
                                 <input type="hidden" name="batch_id" value="{{this.batch_id}}">
                                 <button type="submit" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background-color: var(--danger-color);">Delete</button>

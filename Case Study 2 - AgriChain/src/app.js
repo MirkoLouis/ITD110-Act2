@@ -1,33 +1,45 @@
+// This is the heart of our application. It sets up the web server and defines how 
+// the website responds when users click buttons or visit different pages.
+
 const express = require('express');
 const { engine } = require('express-handlebars');
 const path = require('path');
 const fileUpload = require('express-fileupload');
+
+// We import the runQuery function from src/db.js to talk to our Neo4j database.
 const { runQuery } = require('./db');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Setup Handlebars with 'eq' helper
+// Handlebars is our "template engine." It helps us create HTML pages dynamically 
+// by plugging in data from our database into the files found in src/views.
 app.engine('hbs', engine({
     extname: '.hbs',
     defaultLayout: 'main',
     layoutsDir: path.join(__dirname, 'views/layouts'),
     helpers: {
+        // This simple helper lets us check if two values are equal in our HTML templates.
         eq: (a, b) => a === b
     }
 }));
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Middleware
+// Middleware are helper functions that run before our routes.
+// 1. static: serves files like CSS and images from the 'public' folder.
+// 2. urlencoded: lets us read data sent from HTML forms.
+// 3. fileUpload: allows users to upload backup files for the Restore feature.
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload());
 
 // --- ROUTES ---
+// Routes define the "paths" of our website (like /trace or /backup).
 
-// Homepage: List Chemicals (Root)
+// Homepage: Show a list of all chemicals in the inventory.
+// This is the first thing a user sees. We fetch every 'AgriChemical' from Neo4j.
 app.get('/', async (req, res) => {
     try {
         const cypher = 'MATCH (c:AgriChemical) RETURN c ORDER BY c.batch_id';
@@ -43,16 +55,17 @@ app.get('/', async (req, res) => {
     }
 });
 
-// Trace Analysis Route (HTML Results)
+// Trace Analysis Route: Performs the "Threat Intelligence" logic.
+// It finds where a chemical went and suggests safe alternative farms.
 app.get('/trace', async (req, res) => {
     const { batchId } = req.query;
     console.log(`Trace requested for batch: ${batchId}`);
     
     try {
+        // Step 1: Check the status and name of the chemical.
         const statusQuery = `
             MATCH (c:AgriChemical {batch_id: $batchId}) 
-            OPTIONAL MATCH (r:RawMaterial)-[:SUPPLIED_TO]->(c)
-            RETURN c.status AS status, c.product_name AS name, collect(r.name) AS raw_materials
+            RETURN c.status AS status, c.product_name AS name
         `;
         const statusResult = await runQuery(statusQuery, { batchId });
         
@@ -62,9 +75,9 @@ app.get('/trace', async (req, res) => {
 
         const chemicalStatus = statusResult.records[0].get('status');
         const productName = statusResult.records[0].get('name') || 'Unknown Product';
-        const rawMaterials = statusResult.records[0].get('raw_materials');
 
-        // Find affected markets and the crops they received from the toxic source
+        // Step 2: Find all markets that received crops treated with this chemical.
+        // We follow the path: Chemical <- Farm -> Crop -> (Facility) -> Market.
         const cypher = `
             MATCH (toxic:AgriChemical {batch_id: $batchId})
             <-[:APPLIED]-(farm:Farm)
@@ -81,11 +94,13 @@ app.get('/trace', async (req, res) => {
         const result = await runQuery(cypher, { batchId });
         const affectedMarkets = [];
 
-        // For each affected market, find alternative safe sources for that specific crop
+        // Step 3: Resilience Engine.
+        // For each affected market, we search for safe farms producing the same crop.
         for (const record of result.records) {
             const mId = record.get('market_id');
             const cType = record.get('crop_type');
 
+            // Find farms producing the same crop that have NO recalled chemicals applied.
             const altQuery = `
                 MATCH (safe_farm:Farm)-[:PRODUCED]->(safe_batch:CropBatch {crop_type: $cType})
                 WHERE NOT EXISTS {
@@ -110,11 +125,11 @@ app.get('/trace', async (req, res) => {
             });
         }
 
+        // Send all this data to the src/views/results.hbs file to be displayed.
         res.render('results', { 
             batchId, 
             productName, 
             chemicalStatus, 
-            rawMaterials,
             isRecalled: chemicalStatus === 'RECALLED',
             affectedMarkets 
         });
@@ -124,14 +139,16 @@ app.get('/trace', async (req, res) => {
     }
 });
 
-// API endpoint for Graph Visualization
+// Graph Data: This route provides JSON data specifically for the interactive 
+// visualization graph seen on the results page. It's used by src/public/js/graph.js.
 app.get('/api/trace-graph', async (req, res) => {
     const { batchId } = req.query;
     
+    // We fetch the downstream supply chain starting from the chemical.
     const cypher = `
         MATCH (c:AgriChemical {batch_id: $batchId})
-        OPTIONAL MATCH path = (c)<-[:APPLIED]-(farm)-[:PRODUCED|PROCESSED_AT|DISTRIBUTED_TO*0..5]->(downstream)
-        RETURN c, path
+        OPTIONAL MATCH path = (c)<-[:APPLIED]-(farm)-[:PRODUCED|PROCESSED_AT|DISTRIBUTED_TO*0..5]->(end)
+        RETURN c, collect(path) AS paths
     `;
 
     try {
@@ -142,40 +159,47 @@ app.get('/api/trace-graph', async (req, res) => {
 
         result.records.forEach(record => {
             const chemNode = record.get('c');
-            const path = record.get('path');
+            const supplyPaths = record.get('paths');
 
+            // Add the starting chemical node.
             nodes.set(chemNode.elementId, { 
                 id: chemNode.elementId, 
                 label: chemNode.labels[0] + ": " + (chemNode.properties.product_name || chemNode.properties.batch_id),
                 group: chemNode.labels[0],
-                status: chemNode.properties.status
+                status: chemNode.properties.status,
+                ...chemNode.properties
             });
 
-            if (path) {
-                path.segments.forEach(segment => {
-                    const start = segment.start;
-                    const end = segment.end;
-                    const rel = segment.relationship;
+            // Process the supply chain paths and add every node/connection to the graph.
+            supplyPaths.forEach(path => {
+                if (path) {
+                    path.segments.forEach(segment => {
+                        const start = segment.start;
+                        const end = segment.end;
+                        const rel = segment.relationship;
 
-                    nodes.set(start.elementId, { 
-                        id: start.elementId, 
-                        label: start.labels[0] + ": " + (start.properties.product_name || start.properties.name || start.properties.batch_id || start.properties.farm_id || start.properties.market_id),
-                        group: start.labels[0]
+                        nodes.set(start.elementId, { 
+                            id: start.elementId, 
+                            label: start.labels[0] + ": " + (start.properties.product_name || start.properties.name || start.properties.batch_id || start.properties.farm_id || start.properties.market_id),
+                            group: start.labels[0],
+                            ...start.properties
+                        });
+
+                        nodes.set(end.elementId, { 
+                            id: end.elementId, 
+                            label: end.labels[0] + ": " + (end.properties.product_name || end.properties.name || end.properties.batch_id || end.properties.farm_id || end.properties.market_id),
+                            group: end.labels[0],
+                            ...end.properties
+                        });
+
+                        edges.add(JSON.stringify({
+                            from: start.elementId,
+                            to: end.elementId,
+                            label: rel.type
+                        }));
                     });
-
-                    nodes.set(end.elementId, { 
-                        id: end.elementId, 
-                        label: end.labels[0] + ": " + (end.properties.product_name || end.properties.name || end.properties.batch_id || end.properties.farm_id || end.properties.market_id),
-                        group: end.labels[0]
-                    });
-
-                    edges.add(JSON.stringify({
-                        from: start.elementId,
-                        to: end.elementId,
-                        label: rel.type
-                    }));
-                });
-            }
+                }
+            });
         });
 
         res.json({
@@ -188,7 +212,8 @@ app.get('/api/trace-graph', async (req, res) => {
     }
 });
 
-// JSON Backup Feature (Full Graph Export)
+// Backup: Download the entire database content as a JSON file.
+// This is useful for moving data or saving progress.
 app.get('/api/backup', async (req, res) => {
     try {
         const nodesResult = await runQuery('MATCH (n) RETURN n');
@@ -223,7 +248,8 @@ app.get('/api/backup', async (req, res) => {
     }
 });
 
-// JSON Restore Feature (Full Graph Import)
+// Restore: Upload a JSON backup file to rebuild the entire database.
+// This wipe current data and recreates every node and relationship.
 app.post('/api/restore', async (req, res) => {
     if (!req.files || !req.files.backupFile) {
         return res.status(400).send('No backup file uploaded.');
@@ -232,14 +258,17 @@ app.post('/api/restore', async (req, res) => {
     try {
         const backupData = JSON.parse(req.files.backupFile.data.toString());
         
+        // 1. Wipe current database.
         await runQuery('MATCH (n) DETACH DELETE n');
 
+        // 2. Recreate Nodes.
         for (const node of backupData.nodes) {
             const labels = node.labels.join(':');
             const query = `CREATE (n:${labels} $props) SET n._old_id = $oldId`;
             await runQuery(query, { props: node.properties, oldId: node.id });
         }
 
+        // 3. Recreate Relationships by matching original IDs.
         for (const rel of backupData.relationships) {
             const query = `
                 MATCH (a), (b)
@@ -249,6 +278,7 @@ app.post('/api/restore', async (req, res) => {
             await runQuery(query, { fromId: rel.fromId, toId: rel.toId, props: rel.properties });
         }
 
+        // 4. Cleanup temporary mapping IDs.
         await runQuery('MATCH (n) REMOVE n._old_id');
 
         res.redirect('/?restored=true');
@@ -259,8 +289,9 @@ app.post('/api/restore', async (req, res) => {
 });
 
 // --- CRUD OPERATIONS ---
+// These routes handle the "Create, Update, Delete" of AgriChemicals.
 
-// Create Chemical
+// Create: Add a new chemical to the database.
 app.post('/chemicals', async (req, res) => {
     const { batch_id, type, manufacturer, status } = req.body;
     try {
@@ -273,7 +304,7 @@ app.post('/chemicals', async (req, res) => {
     }
 });
 
-// Update Status
+// Update: Change the status (OK or RECALLED) of a chemical.
 app.post('/chemicals/update-status', async (req, res) => {
     const { batch_id, status } = req.body;
     try {
@@ -286,7 +317,7 @@ app.post('/chemicals/update-status', async (req, res) => {
     }
 });
 
-// Delete Chemical
+// Delete: Permanently remove a chemical from the database.
 app.post('/chemicals/delete', async (req, res) => {
     const { batch_id } = req.body;
     try {

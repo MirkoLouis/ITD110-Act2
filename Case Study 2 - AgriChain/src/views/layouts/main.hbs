@@ -1,21 +1,31 @@
+{{!-- This is our "Layout" file. It contains the HTML code that is shared across 
+      every single page on our website (like the header and footer). --}}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgriChain - Northern Mindanao Traceability</title>
+    
+    {{!-- We link our main stylesheet (src/public/css/style.css) here so every page 
+          inherits our project's branding and colors. --}}
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+    {{!-- The Header appears at the top of every page. --}}
     <header>
         <h1>AgriChain</h1>
         <p>Graph-Driven Supply Chain Intelligence</p>
     </header>
 
+    {{!-- This special "body" tag is a placeholder. Handlebars will inject the 
+          content of our other view files (like list.hbs or results.hbs) right here. --}}
     <main class="container">
         {{{body}}}
     </main>
 
+    {{!-- The Footer appears at the bottom of every page. --}}
     <footer>
         <div>
             <p>&copy; 2026 AgriChain. Northern Mindanao Agriculture Intelligence.</p>

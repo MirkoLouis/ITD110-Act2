@@ -7,7 +7,7 @@
 **AgriChain** is a graph-driven, farm-to-table traceability and threat intelligence web application for Northern Mindanao. Developed in fulfillment of the requirements for **ITD110 - NoSQL Databases** ([Case Study #2](./ITD110%20-%20Case%20Study%20%232.md)), it models the agricultural economy as an interconnected web, allowing for instantaneous contamination tracing and supply chain resilience.
 
 ## 🚀 Core Features
-- **Multi-Tier Traceability:** Track agricultural products from industrial raw materials (Tier 3) to retail markets.
+- **Instant Traceability:** Track agricultural products from chemical application at the farm to retail markets.
 - **Affected Area Analysis:** Rapidly identify all markets and regions impacted by a contaminated chemical batch.
 - **Resilience Engine:** Intelligent recommendation of safe alternative farm sources during recall events.
 - **Interactive Visualization:** Dynamic graph mapping of supply chains using `vis-network`.
@@ -21,7 +21,7 @@ AgriChain leverages Neo4j to solve the "Deep Traversal" problem inherent in supp
 | :--- | :--- | :--- |
 | **Performance** | Slows exponentially with depth (Recursive JOINs). | Constant time traversal via direct pointers. |
 | **Data Model** | Rigid tables and foreign keys. | Flexible nodes and semantic relationships. |
-| **Speed** | Seconds/Minutes for deep tracing. | Milliseconds for multi-tier tracing. |
+| **Speed** | Seconds/Minutes for deep tracing. | Milliseconds for multi-hop tracing. |
 
 **The Technical Difference:** SQL must compute connections "on the fly" by scanning tables. Neo4j uses **Index-Free Adjacency**, where relationships are physically stored as memory pointers on disk. Finding a path in Neo4j is as simple as following a string from one point to another.
 

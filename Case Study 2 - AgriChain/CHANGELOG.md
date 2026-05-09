@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.2-Alpha+202605091830] - 2026-05-09
+
+### ADDED
+- **Standardized Recall Dashboard:** Re-engineered the "Affected Area" results with a 4-column grid and fixed-line text limiting for perfect visual symmetry.
+- **Improved UX Navigation:** Relocated and rebranded the "Go back to homepage" button to the top of the results page for immediate dashboard access.
+- **Educational Walkthrough:** Systematically refactored code comments in all 8 project files to serve as a simple, interconnected guide for students and lecturers.
+- **Fulfillment Statement:** Updated `README.md` to formally acknowledge the project as a requirement for **ITD110 - NoSQL Databases**.
+
+### FIXED
+- **Model Simplification:** Removed complex Industrial Raw Ingredient (Tier 3) data to focus on a high-verifiability Farm-to-Table model.
+- **Dashboard Grid Restoration:** Re-implemented the 30/70 spatial split on the homepage to ensure the Add Form and Inventory Table share the same row.
+- **Graph Accuracy:** Updated the visual legend and node styling to precisely match the simplified supply chain entities.
+
 ## [0.8.1-Alpha+202605091800] - 2026-05-09
 
 ### ADDED
@@ -12,14 +25,14 @@ All notable changes to this project will be documented in this file.
 ## [0.8.0-Alpha+202605091730] - 2026-05-09
 
 ### ADDED
-- **Multi-Tier Traceability:** Introduced `RawMaterial` (Tier 3) nodes to track industrial ingredients supplied to chemical manufacturers.
 - **Affected Area Analysis:** Rebranded "Blast Radius" to "Affected Area" for professional clarity.
-- **Deep Lineage Summary:** The trace dashboard now displays industrial raw materials for each chemical batch.
 - **Vision Overhaul:** Major documentation rewrite incorporating the project's strategic identity and Neo4j performance justification.
+- **Safe Alternatives Legend:** Added a detailed visual guide for graph node shapes and colors.
 
 ### FIXED
 - **Homepage Consolidation:** Chemical Management is now served directly at the root URL (`/`).
 - **Route Optimization:** Removed redundant `/chemicals` route and updated all CRUD redirects.
+- **Dynamic Node Coloring:** Fixed issue where chemical nodes did not turn Red/Green based on status.
 
 ## [0.7.0-Alpha+202605091700] - 2026-05-09
 
